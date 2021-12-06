@@ -1,0 +1,11 @@
+.App {
+  font-size: calc(8px + 3vmin)
+}
+
+.title {
+  font-size: calc(12px + 4vmin);
+}
+
+input, button {
+  font-size: inherit
+}
