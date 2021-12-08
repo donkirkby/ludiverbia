@@ -13,10 +13,17 @@ class WordGrid extends React.Component {
             endWord: endWord.toUpperCase(),
             newWord: newWord
         };
+        this.addField = React.createRef();
     }
 
-    handleNewWordChange = (event) => {
+    handleNewWordChange = event => {
         this.setState({newWord: event.target.value});
+    };
+
+    handleNewWordKeyPress = event => {
+        if (event.key === 'Enter') {
+            this.handleNewWord();
+        }
     };
 
     handleNewWord = () => {
@@ -37,6 +44,7 @@ class WordGrid extends React.Component {
             this.setState({startWord: this.state.midWord, midWord: newWord});
         }
         this.setState({newWord: ''});
+        this.addField.current.focus();
     };
 
     render() {
@@ -56,16 +64,20 @@ class WordGrid extends React.Component {
             {(this.state.midWord && <tr><td>{this.state.midWord}</td></tr>)||null}
             {(this.state.endWord &&
               <tr><td>{this.state.endWord}</td><td>{endBet}</td></tr>)||null}
-            <tr><td><div className="newWord">
-                <input
+            <tr>
+                <td><input
                     type="text"
                     placeholder="Type a word here."
                     value={this.state.newWord}
+                    ref={this.addField}
+                    autoFocus
+                    onKeyPress={this.handleNewWordKeyPress}
                     onChange={this.handleNewWordChange}/>
-                <button onClick={this.handleNewWord} disabled={ ! canAdd}>
+
+                </td><td><button onClick={this.handleNewWord} disabled={ ! canAdd}>
                     Add
-                </button>
-            </div></td></tr>
+                </button></td>
+            </tr>
         </tbody></table>;
     }
 }

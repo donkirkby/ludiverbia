@@ -1,10 +1,14 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from "@testing-library/user-event";
 import WordGrid from './WordGrid';
 
 test('starts with no words', () => {
   render(<WordGrid />);
   const oldWords = screen.queryAllByRole("row");
-  expect(oldWords.length).toBe(1);
+  const addWord = screen.getByRole("textbox");
+
+  expect(oldWords.length).toBe(1);  // Row for adding another word.
+  expect(addWord).toHaveFocus();
 });
 
 test('starts with properties', () => {
@@ -35,6 +39,17 @@ test('add a word', () => {
   expect(addButton).toBeEnabled();
 
   fireEvent.click(addButton);
+
+  const oldWords = screen.queryAllByRole("row");
+  expect(oldWords.length).toBe(2);
+  expect(oldWords[0]).toHaveTextContent("EXAMPLE");
+});
+
+test('add a word with enter key', () => {
+  render(<WordGrid />);
+  const newWord = screen.getByRole("textbox");
+
+  userEvent.type(newWord, "Example{enter}");
 
   const oldWords = screen.queryAllByRole("row");
   expect(oldWords.length).toBe(2);
@@ -97,6 +112,23 @@ test('type a third word after', () => {
   const addButton = screen.getByText("Add");
 
   expect(addButton).toBeDisabled();
+});
+
+test('add a fourth word early', () => {
+  render(<WordGrid
+    startWord="apple"
+    midWord="nurse"
+    endWord="zebra"
+    newWord="candy"/>);
+  const addButton = screen.getByText("Add");
+
+  fireEvent.click(addButton);
+
+  const oldWords = screen.queryAllByRole("row");
+  expect(oldWords.length).toBe(4);
+  expect(oldWords[0]).toHaveTextContent("APPLE");
+  expect(oldWords[1]).toHaveTextContent("CANDY");
+  expect(oldWords[2]).toHaveTextContent("NURSE");
 });
 
 test('add a fourth word late', () => {
