@@ -75,7 +75,8 @@ class WordGrid extends React.Component {
         return <table className="WordGrid"><tbody>
             {(this.state.startWord &&
               <tr><td>{this.state.startWord}</td><td>{startBet}</td></tr>)||null}
-            {(this.state.midWord && <tr><td>{this.state.midWord}</td></tr>)||null}
+            {(this.state.midWord &&
+              <tr><td colspan="2">{this.state.midWord}</td></tr>)||null}
             {(this.state.endWord &&
               <tr><td>{this.state.endWord}</td><td>{endBet}</td></tr>)||null}
             <tr>
