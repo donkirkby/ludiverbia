@@ -3,10 +3,14 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import DataSource from "./DataSource";
+
+const dataSource = new DataSource();
+dataSource.connect()
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App dataSource={dataSource}/>
   </React.StrictMode>,
   document.getElementById('root')
 );

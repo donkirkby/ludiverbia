@@ -1,3 +1,4 @@
+import { set, ref } from '@firebase/database';
 import React from 'react';
 
 class WordGrid extends React.Component {
@@ -11,7 +12,8 @@ class WordGrid extends React.Component {
             startWord: startWord.toUpperCase(),
             midWord: midWord.toUpperCase(),
             endWord: endWord.toUpperCase(),
-            newWord: newWord
+            newWord: newWord,
+            dataSource: props.dataSource
         };
         this.addField = React.createRef();
     }
@@ -27,23 +29,35 @@ class WordGrid extends React.Component {
     };
 
     handleNewWord = () => {
-        let newWord = this.state.newWord.toUpperCase(); 
+        const newWord = this.state.newWord.toUpperCase(),
+            newState = {newWord: ''};
         if ( ! this.state.startWord) {
-            this.setState({startWord: newWord});
+            newState.startWord = newWord;
         } else if ( ! this.state.endWord) {
             if (this.state.startWord < newWord) {
-                this.setState({endWord: newWord});
+                newState.endWord = newWord;
             } else {
-                this.setState({startWord: newWord, endWord: this.state.startWord});
+                newState.startWord = newWord;
+                newState.endWord = this.state.startWord;
             }
         } else if ( ! this.state.midWord) {
-            this.setState({midWord: newWord});
+            newState.midWord = newWord;
         } else if (newWord < this.state.midWord) {
-            this.setState({midWord: newWord, endWord: this.state.midWord});
+            newState.midWord = newWord;
+            newState.endWord = this.state.midWord;
         } else {
-            this.setState({startWord: this.state.midWord, midWord: newWord});
+            newState.startWord = this.state.midWord;
+            newState.midWord = newWord;
         }
-        this.setState({newWord: ''});
+        this.setState(newState);
+        if (this.state.dataSource !== undefined) {
+            if (this.state.dataSource.database === undefined) {
+                console.warn("Undefined database!");
+            } else {
+                const singletonRef = ref(this.state.dataSource.database, 'singleton');
+                set(singletonRef, newState);
+            }
+        }
         this.addField.current.focus();
     };
 

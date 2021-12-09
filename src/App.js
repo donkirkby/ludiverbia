@@ -2,7 +2,7 @@ import './App.css';
 import './WordGrid';
 import WordGrid from './WordGrid';
 
-function App() {
+function App(props) {
   return (
     <div className="App">
       <div className="title">Halfabet</div>
@@ -15,7 +15,7 @@ function App() {
       <p>Instead of adding a word, you can bet that your opponent can't find a
         word between two of the current words. Click on one of the bet buttons
         to show which gap they need to fill in.</p>
-      <WordGrid/>
+      <WordGrid dataSource={props.dataSource}/>
     </div>
   );
 }
