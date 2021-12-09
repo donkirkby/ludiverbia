@@ -3,6 +3,6 @@ import App from './App';
 
 test('renders learn react link', () => {
   render(<App />);
-  const titleElement = screen.getByText(/Halfabet/i);
+  const titleElement = screen.getByText(/Add/i);
   expect(titleElement).toBeInTheDocument();
 });

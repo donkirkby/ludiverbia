@@ -114,6 +114,16 @@ test('type a third word after', () => {
   expect(addButton).toBeDisabled();
 });
 
+test('add a third word after with enter key', () => {
+  render(<WordGrid startWord="avocado" endWord="zebra" newWord="zulu"/>);
+  const newWord = screen.getByRole("textbox");
+
+  userEvent.type(newWord, "{enter}");
+
+  const oldWords = screen.queryAllByRole("row");
+  expect(oldWords.length).toBe(3);
+});
+
 test('add a fourth word early', () => {
   render(<WordGrid
     startWord="apple"

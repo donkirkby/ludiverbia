@@ -19,11 +19,8 @@ const firebaseConfig = {
 class DataSource {
     connect = () => {
         // Initialize Firebase
-        console.warn("Initializing app.");
         this.app = initializeApp(firebaseConfig);
-        console.warn("App result: " + this.app);
         this.database = getDatabase(this.app);
-        console.warn("Connection result: " + this.database);
         const auth = getAuth();
         signInAnonymously(auth);
         let dataSource = this;

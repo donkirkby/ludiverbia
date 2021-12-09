@@ -1,4 +1,4 @@
-import { set, ref } from '@firebase/database';
+import { set, ref, onValue } from '@firebase/database';
 import React from 'react';
 
 class WordGrid extends React.Component {
@@ -16,7 +16,23 @@ class WordGrid extends React.Component {
             dataSource: props.dataSource
         };
         this.addField = React.createRef();
+        if (this.checkDataSource()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+            onValue(singletonRef, this.handleDatabaseWords);
+        }
     }
+
+    handleDatabaseWords = (snapshot) => {
+        const wordInfo = snapshot.val();
+        if (wordInfo === null) {
+            return;
+        }
+        this.setState({
+            startWord: wordInfo.startWord,
+            midWord: wordInfo.midWord,
+            endWord: wordInfo.endWord
+        });
+    };
 
     handleNewWordChange = event => {
         this.setState({newWord: event.target.value});
@@ -30,7 +46,12 @@ class WordGrid extends React.Component {
 
     handleNewWord = () => {
         const newWord = this.state.newWord.toUpperCase(),
-            newState = {newWord: ''};
+            newState = {},
+            saveState = {
+                startWord: this.state.startWord,
+                midWord: this.state.midWord,
+                endWord: this.state.endWord
+            };
         if ( ! this.state.startWord) {
             newState.startWord = newWord;
         } else if ( ! this.state.endWord) {
@@ -49,23 +70,33 @@ class WordGrid extends React.Component {
             newState.startWord = this.state.midWord;
             newState.midWord = newWord;
         }
+        Object.assign(saveState, newState);
+        newState.newWord = '';
         this.setState(newState);
-        if (this.state.dataSource !== undefined) {
-            if (this.state.dataSource.database === undefined) {
-                console.warn("Undefined database!");
-            } else {
-                const singletonRef = ref(this.state.dataSource.database, 'singleton');
-                set(singletonRef, newState);
-            }
+        if (this.checkDataSource()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+            set(singletonRef, saveState);
         }
         this.addField.current.focus();
+    };
+
+    checkDataSource = () => {
+        if (this.state.dataSource !== undefined) {
+            if (this.state.dataSource.database !== undefined) {
+                return true;
+            }
+            console.warn("Undefined database!");
+            this.setState({dataSource: undefined});
+        }
+        return false;
     };
 
     render() {
         const newWord = this.state.newWord.toUpperCase(),
               canAdd = (
                   (newWord && ! this.state.endWord) ||
-                  (this.state.startWord < newWord && newWord < this.state.endWord));
+                  (this.state.startWord < newWord && newWord < this.state.endWord)),
+              onKeyPress = (canAdd && this.handleNewWordKeyPress) || (() => {});
         let startBet = null,
             endBet = null;
         if (this.state.midWord)  {
@@ -76,7 +107,7 @@ class WordGrid extends React.Component {
             {(this.state.startWord &&
               <tr><td>{this.state.startWord}</td><td>{startBet}</td></tr>)||null}
             {(this.state.midWord &&
-              <tr><td colspan="2">{this.state.midWord}</td></tr>)||null}
+              <tr><td colSpan="2">{this.state.midWord}</td></tr>)||null}
             {(this.state.endWord &&
               <tr><td>{this.state.endWord}</td><td>{endBet}</td></tr>)||null}
             <tr>
@@ -86,7 +117,7 @@ class WordGrid extends React.Component {
                     value={this.state.newWord}
                     ref={this.addField}
                     autoFocus
-                    onKeyPress={this.handleNewWordKeyPress}
+                    onKeyPress={onKeyPress}
                     onChange={this.handleNewWordChange}/>
 
                 </td><td><button onClick={this.handleNewWord} disabled={ ! canAdd}>
