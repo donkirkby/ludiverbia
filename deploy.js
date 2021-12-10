@@ -53,11 +53,12 @@ function main() {
             fs.unlinkSync(destFilePath);
         }
     }
-    d = fs.opendirSync(src);
-    while ((entry = d.readSync()) !== null) {
-        let srcFilePath = path.join(src, entry.name),
-            destFilePath = path.join(dest, entry.name);
-        if (entry.name !== 'index.html') {
+    const entries = fs.readdirSync(src);
+    entries.sort();  // Fails if we hit index.html before _includes.
+    for (entry of entries) {
+        let srcFilePath = path.join(src, entry),
+            destFilePath = path.join(dest, entry);
+        if (entry !== 'index.html') {
             fs.renameSync(srcFilePath, destFilePath);
         } else {
             copyIndex(srcFilePath, dest);
