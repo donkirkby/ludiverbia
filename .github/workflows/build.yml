@@ -19,9 +19,6 @@ jobs:
       with:
         node-version: 12.x
         cache: 'npm'
-    - run: pwd ; ls -l ; ls -l docs ; ls -l docs/_includes
     - run: npm ci
-    - run: pwd ; ls -l ; ls -l docs ; ls -l docs/_includes
     - run: npm run build --if-present
-    - run: pwd ; ls -l ; ls -l docs ; ls -l docs/_includes
     - run: npm test
