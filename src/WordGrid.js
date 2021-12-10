@@ -13,7 +13,8 @@ class WordGrid extends React.Component {
             midWord: midWord.toUpperCase(),
             endWord: endWord.toUpperCase(),
             newWord: newWord,
-            dataSource: props.dataSource
+            dataSource: props.dataSource,
+            confirmReset: props.confirmReset
         };
         this.addField = React.createRef();
         if (this.checkDataSource()) {
@@ -89,6 +90,23 @@ class WordGrid extends React.Component {
             this.setState({dataSource: undefined});
         }
         return false;
+    };
+
+    handleStartBet = () => {
+        this.reset();
+    }
+
+    handleEndBet = () => {
+        this.reset();
+    }
+
+    reset = () => {
+        if (this.state.confirmReset) {
+            if ( ! window.confirm("Reset the game?")) {
+                return;
+            }
+        }
+        this.setState({startWord: "", midWord: "", endWord: "", newWord: ""});
     };
 
     render() {

@@ -157,3 +157,19 @@ test('add a fourth word late', () => {
   expect(oldWords[1]).toHaveTextContent("OPERA");
   expect(oldWords[2]).toHaveTextContent("ZEBRA");
 });
+
+test('bet button resets', () => {
+  render(<WordGrid
+    startWord="apple"
+    midWord="nurse"
+    endWord="zebra"
+    newWord="opera"/>);
+  const betButton = screen.getByText("Bet Before");
+
+  fireEvent.click(betButton);
+
+  const oldWords = screen.queryAllByRole("row");
+  expect(oldWords.length).toBe(1);
+  const newWordField = screen.getByRole("textbox");
+  expect(newWordField).toHaveValue("");
+});

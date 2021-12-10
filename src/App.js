@@ -5,7 +5,7 @@ import WordGrid from './WordGrid';
 function App(props) {
   return (
     <div className="App">
-      <WordGrid dataSource={props.dataSource}/>
+      <WordGrid dataSource={props.dataSource} confirmReset="yes"/>
     </div>
   );
 }
