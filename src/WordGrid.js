@@ -103,10 +103,18 @@ class WordGrid extends React.Component {
     reset = () => {
         if (this.state.confirmReset) {
             if ( ! window.confirm("Reset the game?")) {
+                this.addField.current.focus();
                 return;
             }
         }
-        this.setState({startWord: "", midWord: "", endWord: "", newWord: ""});
+        this.addField.current.focus();
+        const newState = {startWord: "", midWord: "", endWord: ""};
+        if (this.checkDataSource()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+            set(singletonRef, newState);
+        }
+        newState.newWord = "";
+        this.setState(newState);
     };
 
     render() {
