@@ -2,15 +2,26 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import QuizlApp from './QuizlApp';
 import reportWebVitals from './reportWebVitals';
 import DataSource from "./DataSource";
 
 const dataSource = new DataSource();
-dataSource.connect()
+dataSource.connect();
+const pagePath = window.location.pathname.replace(/(\.html)?\/*$/, ''),
+  pageName = pagePath.split('/').at(-1);
+var app;
+switch (pageName) {
+  case 'quizl':
+    app = <QuizlApp/>
+    break;
+  default:
+    app = <App dataSource={dataSource}/>
+}
 
 ReactDOM.render(
   <React.StrictMode>
-    <App dataSource={dataSource}/>
+    {app}
   </React.StrictMode>,
   document.getElementById('root')
 );

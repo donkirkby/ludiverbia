@@ -6,32 +6,11 @@ function wrapReact(source) {
 }
 
 function copyIndex(indexSrcPath, destFolderPath) {
-    const indexMarkdown = `\
----
-title: Halfabet
-layout: react
-is_react: True
----
-
-The players take turns adding words to the list. After the first two
-words, all words must be between the two outermost words,
-alphabetically. Whenever you add a fourth word, it stays in the game,
-along with the words before it and after it. The other word gets
-removed. All words must be regular words in an English dictionary: no
-proper nouns or foreign words.
-
-Instead of adding a word, you can bet that your opponent can't find a
-word between two of the current words. Click on one of the bet buttons
-to show which gap they need to fill in.
-`;
     let indexSource = fs.readFileSync(indexSrcPath, 'utf8');
-    let destFilePath = path.join(destFolderPath, 'index.md');
     let includesPath = path.join(destFolderPath, '_includes');
 
-    fs.writeFileSync(destFilePath, indexMarkdown);
-
-    let match = indexSource.match(/<link href=".*" rel="stylesheet">/);
-    destFilePath = path.join(includesPath, 'head-scripts.html');
+    let match = indexSource.match(/<script defer="defer".*" rel="stylesheet">/);
+    let destFilePath = path.join(includesPath, 'head-scripts.html');
     fs.writeFileSync(destFilePath, wrapReact(match[0]));
 
     match = indexSource.match(/<div id="root"><\/div>(.*)<\/body>/ms);
@@ -45,9 +24,17 @@ function main() {
     let d = fs.opendirSync(dest);
     let entry;
     while ((entry = d.readSync()) !== null) {
-        let destFilePath = path.join(dest, entry.name);
-        if (entry.isDirectory()) {
-            fs.rmdirSync(destFilePath, {recursive: true});
+        let destFilePath = path.join(dest, entry.name),
+            isUntouched = (
+                entry.name.startsWith('_') ||
+                entry.name.startsWith('Gemfile') ||
+                entry.name.endsWith('.md')
+            );
+        if (isUntouched) {
+            // Leave untouched.
+        }
+        else if (entry.isDirectory()) {
+            fs.rmSync(destFilePath, {recursive: true});
         }
         else {
             fs.unlinkSync(destFilePath);
