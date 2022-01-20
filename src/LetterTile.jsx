@@ -7,6 +7,7 @@ export function LetterTile(props) {
   });
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 1
   } : undefined;
 
   

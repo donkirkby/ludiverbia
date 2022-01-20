@@ -32,7 +32,6 @@ function QuizlApp(props) {
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
-          spaceId = 'space' + coordinateText,
           defaultIndex = defaultPositions.indexOf(coordinateText),
           positionIndex = positions.indexOf(coordinateText),
           isSpacer = defaultIndex === -1 && (
@@ -56,6 +55,7 @@ function QuizlApp(props) {
             </LetterTile>
           );
         }
+        const spaceId = className + coordinateText;
         containers.push(
           <LetterSpace key={spaceId} id={spaceId} className={className}>
             {tile}
@@ -74,9 +74,14 @@ function QuizlApp(props) {
     function handleDragEnd(event) {
       const letterIndex = event.active.id.charCodeAt(4) - 65,
         newPositions = Array.from(positions);
-      if (event.over) {
+      if (event.over && event.over.id.startsWith('cell')) {
         // dropped over a container, record new position
-        newPositions[letterIndex] = event.over.id.slice(-2);
+        const coordinateText = event.over.id.slice(-2),
+          oldLetterIndex = positions.indexOf(coordinateText);
+        newPositions[letterIndex] = coordinateText;
+        if (oldLetterIndex !== -1) {
+          newPositions[oldLetterIndex] = defaultPositions[oldLetterIndex];
+        }
       }
       else {
         // reset to default
