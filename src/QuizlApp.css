@@ -19,15 +19,18 @@
 }
 
 .letter-tile {
-    width: 80%;
-    height: 80%;
+    width: 36px;
+    height: 36px;
     border: 1px solid black;
 }
 
 .board {
     display: flex;
     flex-flow: row wrap;
-    box-sizing: content-box;
     width: 401px;
     margin: 5px;
+}
+
+.quizl {
+    box-sizing: content-box;
 }

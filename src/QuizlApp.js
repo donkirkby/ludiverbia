@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {DndContext} from '@dnd-kit/core';
+import {DndContext, DragOverlay} from '@dnd-kit/core';
 
 import './App.css';
 import './QuizlApp.css';
@@ -26,9 +26,8 @@ for (let i = 0; i < 26; i++) {
 
 function QuizlApp(props) {
     const containers = [],
-      [positions, setPositions] = useState(Array.from(defaultPositions));
-      /*,
-      draggableMarkup = */
+      [positions, setPositions] = useState(Array.from(defaultPositions)),
+      [draggedLetter, setDraggedLetter] = useState(null);
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
@@ -49,7 +48,7 @@ function QuizlApp(props) {
         if (positionIndex !== -1) {
           const letter = String.fromCharCode(65+positionIndex),
             tileId = 'tile' + letter;
-          tile = (
+          tile = letter !== draggedLetter && (
             <LetterTile key={tileId} id={tileId}>
               {letter}
             </LetterTile>
@@ -64,16 +63,29 @@ function QuizlApp(props) {
     }
     
     return (
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="board">
-          {containers}
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="quizl">
+          <div className="board">
+            {containers}
+          </div>
+          <DragOverlay>
+            {draggedLetter && (
+              <div className="letter-tile has-text-centered has-text-white has-background-primary">
+                {draggedLetter}
+              </div>)}
+          </DragOverlay>
         </div>
       </DndContext>
     );
+
+    function handleDragStart(event) {
+      setDraggedLetter(event.active.id.slice(-1));
+    }
     
     function handleDragEnd(event) {
       const letterIndex = event.active.id.charCodeAt(4) - 65,
         newPositions = Array.from(positions);
+      setDraggedLetter(null);
       if (event.over && event.over.id.startsWith('cell')) {
         // dropped over a container, record new position
         const coordinateText = event.over.id.slice(-2),
