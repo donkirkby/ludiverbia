@@ -1,0 +1,33 @@
+.letter-space {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 46px;
+    height: 46px;
+    border: 2px solid darkgreen;
+}
+
+.spacer {
+    border: none;
+    margin: 2px;
+}
+
+.cell {
+    position: relative;
+    left: 23px;
+    top: 23px;
+}
+
+.letter-tile {
+    width: 80%;
+    height: 80%;
+    border: 1px solid black;
+}
+
+.board {
+    display: flex;
+    flex-flow: row wrap;
+    box-sizing: content-box;
+    width: 401px;
+    margin: 5px;
+}

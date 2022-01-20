@@ -12,6 +12,7 @@ const pagePath = window.location.pathname.replace(/(\.html)?\/*$/, ''),
   pageName = pagePath.split('/').at(-1);
 var app;
 switch (pageName) {
+  case '': // dev mode
   case 'quizl':
     app = <QuizlApp/>
     break;
