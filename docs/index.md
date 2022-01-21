@@ -3,11 +3,20 @@ title: Ludiverbia
 subtitle: The place for word games
 ---
 
-This will be a collection of word games that you can play in your browser or on
-mobile.
-
-* [Halfabet] - a very divisive word game
-* [Quizl] - hunt in the grid for your opponent's word
-
 [Halfabet]: halfabet.md
 [Quizl]: quizl.md
+
+Welcome, ludiverbalists! This will be a collection of word games that you can
+play in your browser or on mobile. The games, so far
+
+* [Halfabet] - a very divisive word game (first playable version)
+* [Quizl] - hunt in the grid for your opponent's word (under construction)
+
+While you're waiting for more games to get added, you might enjoy my old
+collection: [Vograbulary]. Josh Wardle's [Wordle] is very popular, have you
+tried it? [Codewords] is halfway between a word game and a party game, based on
+the Codenames board game.
+
+[Vograbulary]: https://donkirkby.github.io/vograbulary/
+[Wordle]: https://www.powerlanguage.co.uk/wordle/
+[Codewords]: https://netgames.io/games/codewords/

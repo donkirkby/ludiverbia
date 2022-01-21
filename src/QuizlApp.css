@@ -22,6 +22,7 @@
     width: 36px;
     height: 36px;
     border: 1px solid black;
+    cursor: move;
 }
 
 .board {
@@ -33,4 +34,5 @@
 
 .quizl {
     box-sizing: content-box;
+    touch-action: none;
 }

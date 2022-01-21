@@ -5,6 +5,7 @@ import './App.css';
 import './QuizlApp.css';
 import {LetterSpace} from './LetterSpace';
 import {LetterTile} from './LetterTile';
+import {Draggable} from './Draggable';
 
 const size = 8,
   defaultPositions = [];  // entry 0 for A, value is two-digit string: row, col
@@ -49,9 +50,9 @@ function QuizlApp(props) {
           const letter = String.fromCharCode(65+positionIndex),
             tileId = 'tile' + letter;
           tile = letter !== draggedLetter && (
-            <LetterTile key={tileId} id={tileId}>
-              {letter}
-            </LetterTile>
+            <Draggable key={tileId} id={tileId}>
+              <LetterTile letter={letter}/>
+            </Draggable>
           );
         }
         const spaceId = className + coordinateText;
@@ -69,10 +70,7 @@ function QuizlApp(props) {
             {containers}
           </div>
           <DragOverlay>
-            {draggedLetter && (
-              <div className="letter-tile has-text-centered has-text-white has-background-primary">
-                {draggedLetter}
-              </div>)}
+            {draggedLetter && <LetterTile letter={draggedLetter}/>}
           </DragOverlay>
         </div>
       </DndContext>
