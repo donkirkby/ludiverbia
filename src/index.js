@@ -14,7 +14,7 @@ var app;
 switch (pageName) {
   case '': // dev mode
   case 'quizl':
-    app = <QuizlApp/>
+    app = <QuizlApp dataSource={dataSource}/>
     break;
   default:
     app = <App dataSource={dataSource}/>

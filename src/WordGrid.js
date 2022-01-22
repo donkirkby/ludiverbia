@@ -17,8 +17,8 @@ class WordGrid extends React.Component {
             confirmReset: props.confirmReset
         };
         this.addField = React.createRef();
-        if (this.checkDataSource()) {
-            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+        if (this.state.dataSource && this.state.dataSource.check()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton/halfabet');
             onValue(singletonRef, this.handleDatabaseWords);
         }
     }
@@ -74,22 +74,11 @@ class WordGrid extends React.Component {
         Object.assign(saveState, newState);
         newState.newWord = '';
         this.setState(newState);
-        if (this.checkDataSource()) {
-            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+        if (this.state.dataSource && this.state.dataSource.check()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton/halfabet');
             set(singletonRef, saveState);
         }
         this.addField.current.focus();
-    };
-
-    checkDataSource = () => {
-        if (this.state.dataSource !== undefined) {
-            if (this.state.dataSource.database !== undefined) {
-                return true;
-            }
-            console.warn("Undefined database!");
-            this.setState({dataSource: undefined});
-        }
-        return false;
     };
 
     handleStartBet = () => {
@@ -109,8 +98,8 @@ class WordGrid extends React.Component {
         }
         this.addField.current.focus();
         const newState = {startWord: "", midWord: "", endWord: ""};
-        if (this.checkDataSource()) {
-            const singletonRef = ref(this.state.dataSource.database, 'singleton');
+        if (this.state.dataSource && this.state.dataSource.check()) {
+            const singletonRef = ref(this.state.dataSource.database, 'singleton/halfabet');
             set(singletonRef, newState);
         }
         newState.newWord = "";

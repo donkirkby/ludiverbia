@@ -19,10 +19,12 @@
 }
 
 .letter-tile {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+    padding: 5px;
     border: 1px solid black;
     cursor: move;
+    touch-action: none;
 }
 
 .board {
@@ -34,5 +36,4 @@
 
 .quizl {
     box-sizing: content-box;
-    touch-action: none;
 }

@@ -35,6 +35,17 @@ class DataSource {
         });
 
     }
+
+    check = () => {
+        if (this.database !== undefined) {
+            return true;
+        }
+        if ( ! this.hasWarned) {
+            console.warn("Undefined database!");
+            this.hasWarned = true;
+        }
+        return false;
+    }
 }
 
 export default DataSource;
