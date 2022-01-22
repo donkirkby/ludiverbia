@@ -8,10 +8,12 @@ import { QuizlGrid } from './QuizlGrid';
 export default function QuizlApp(props) {
     const [letters, setLetters] = useState({}),
       [player, setPlayer] = useState(''),
+      [isReady, setReady] = useState(false),
       [opponents, setOpponents] = useState([]),
       dataSource = props.dataSource,
       singletonRef = dataSource && dataSource.check() &&
-        ref(dataSource.database, 'singleton/quizl');
+        ref(dataSource.database, 'singleton/quizl'),
+      playersRef = singletonRef && child(singletonRef, 'players');
     
     if (singletonRef) {
       const playersRef = child(singletonRef, 'players');
@@ -23,7 +25,9 @@ export default function QuizlApp(props) {
           player={player}
           onPlayerChange={setPlayer}
           letters={letters}
-          onLettersChange={setLetters}/>
+          onLettersChange={setLetters}
+          isReady={isReady}
+          onReady={handleReady}/>
         {opponents.map((opponentName, i) => (
           <QuizlGrid
             key={`opponent${i}`}
@@ -59,5 +63,13 @@ export default function QuizlApp(props) {
         if ( ! arraysEqual(newOpponents, opponents)) {
           setOpponents(newOpponents);
         }
-    };
+    }
+
+    function handleReady() {
+      if (playersRef) {
+        const playerRef = child(playersRef, dataSource.userId);
+        set(playerRef, {name: player});
+      }
+      setReady(true);
+    }
 }

@@ -81,7 +81,8 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
 export function QuizlGrid(props) {
     const containers = [],
       [draggedLetter, setDraggedLetter] = useState(null),
-      letterLabels = invertMap(props.letters);
+      letterLabels = invertMap(props.letters),
+      isGridFull = Object.entries(props.letters).length === 25;
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
@@ -122,12 +123,18 @@ export function QuizlGrid(props) {
 
     return (
       <form onSubmit={handleReady} className="quizl">
-        <input
-          className="input is-large"
-          type="text"
-          placeholder="Your Name"
-          value={props.player}
-          onChange={handlePlayerChange}/>
+        {props.isReady ? <p>{props.player}</p> : (
+          <div className="player">
+            <input
+              className="input is-large"
+              type="text"
+              placeholder="Your Name"
+              value={props.player}
+              onChange={handlePlayerChange}/>
+            <button
+              className="button is-large is-primary"
+              disabled={ ! isGridFull}>Ready</button>
+          </div>)}
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="board">
             {containers}
@@ -144,10 +151,16 @@ export function QuizlGrid(props) {
     }
 
     function handleDragStart(event) {
+      if (props.isReady) {
+        return;
+      }
       setDraggedLetter(event.active.id.slice(-1));
     }
     
     function handleDragEnd(event) {
+      if (props.isReady) {
+        return;
+      }
       const newLetters = dropLetter(
         draggedLetter,
         event.over && event.over.id,
@@ -158,7 +171,8 @@ export function QuizlGrid(props) {
       setDraggedLetter(null);
     }
 
-    function handleReady() {
-      
+    function handleReady(event) {
+      event.preventDefault();
+      props.onReady();
     }
 }
