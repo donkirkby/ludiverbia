@@ -64,6 +64,38 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
   }
 }
 
+/** Randomly fill in blank spaces with unused letters.
+ * 
+ * @param {*} oldLetters - current letters in each space {label: letter}
+ * @returns newLetters with all spaces filled in
+ */
+ export function fillLetters(oldLetters) {
+  const newLetters = Object.assign({}, oldLetters),
+    usedLetters = new Set(Object.values(oldLetters)),
+    unusedLetters = [];
+  for (let i = 0; i < 26; i++) {
+    const letter = String.fromCharCode(i+65);
+    if ( ! usedLetters.has(letter)) {
+      unusedLetters.push(letter);
+    }
+  }
+
+  for (let row = 5; row < 10; row++) {
+    for (let column = 0; column < 5; column++) {
+      const label = `${row}${column}`,
+        oldLetter = oldLetters[label];
+      if ( ! oldLetter) {
+        const chosenIndex = Math.random() * unusedLetters.length | 0;
+        newLetters[label] = unusedLetters[chosenIndex]
+        const popped = unusedLetters.pop();
+        if (chosenIndex < unusedLetters.length) {
+          unusedLetters[chosenIndex] = popped;
+        }
+      }
+    }
+  }
+  return newLetters;
+ }
 
 /** Grid of letters for the Quizl game
  * 
@@ -75,6 +107,8 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
  * @param props.isReady - true if Ready button has been clicked, or grid
  *  belongs to an opponent
  * @param props.onReady - callback when Ready button is clicked
+ * @param props.disabled - true if grid belongs to an opponent, but game
+ *  hasn't started
  * @param props.onHit - callback when a target button is clicked, receives
  *  label
  */
@@ -90,12 +124,15 @@ export function QuizlGrid(props) {
           defaultIndex = defaultPositions.indexOf(coordinateText),
           isSpacer = defaultIndex === -1 && (
             row === 0 || row === size-1 || row === size-2 || column === size-2);
-        let tile = null, className = '', letter = null;
+        let tile = null, className = '', letter = null, disabled = false;
         if (defaultIndex !== -1) {
           className = 'home';
           letter = String.fromCharCode(65+defaultIndex);
           if (letterLabels[letter] !== undefined) {
             letter = null;  // dragged away
+          }
+          else {
+            disabled = props.isReady;
           }
         }
         else if (isSpacer) {
@@ -104,14 +141,25 @@ export function QuizlGrid(props) {
         else {
           className = 'cell';
           letter = props.letters[spaceLabel] || null;
+          if (letter) {
+            disabled = props.isReady;
+          }
+          else if (props.isReady) {
+            letter = spaceLabel;
+            disabled = props.disabled;
+          }
         }
         if (letter !== null && letter !== draggedLetter) {
-          const tileId = 'tile' + letter;
-          tile = (
-            <Draggable key={tileId} id={tileId}>
-              <LetterTile text={letter}/>
-            </Draggable>
-          );
+          const tileId = 'tile' + letter,
+            dragId = 'drag' + letter;
+          tile = <LetterTile key={tileId} text={letter} disabled={disabled}/>;
+          if ( ! props.isReady) {
+            tile = <Draggable key={dragId} id={dragId}>
+              <div className="draggable-letter">
+                {tile}
+              </div>
+            </Draggable>;
+          }
         }
         const spaceId = className + coordinateText;
         containers.push(
@@ -134,6 +182,10 @@ export function QuizlGrid(props) {
             <button
               className="button is-large is-primary"
               disabled={ ! isGridFull}>Ready</button>
+            <button
+              className="button is-large is-primary"
+              onClick={handleFill}
+              disabled={isGridFull}>Fill</button>
           </div>)}
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="board">
@@ -148,6 +200,10 @@ export function QuizlGrid(props) {
 
     function handlePlayerChange(event) {
       props.onPlayerChange(event.target.value);
+    }
+
+    function handleFill() {
+      props.onLettersChange(fillLetters(props.letters));
     }
 
     function handleDragStart(event) {

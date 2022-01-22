@@ -23,8 +23,11 @@
     height: 32px;
     padding: 5px;
     border: 1px solid black;
-    cursor: move;
     touch-action: none;
+}
+
+.draggable-letter button {
+    cursor: move;
 }
 
 .board {

@@ -33,7 +33,8 @@ export default function QuizlApp(props) {
             key={`opponent${i}`}
             player={opponentName}
             letters={{}}
-            isReady={true}/>
+            isReady={true}
+            disabled={ ! isReady}/>
         ))}
       </div>;
 
@@ -58,6 +59,8 @@ export default function QuizlApp(props) {
         for (const [playerId, playerInfo] of Object.entries(playersInfo)) {
           if (playerId !== dataSource.userId) {
             newOpponents.push(playerInfo.name);
+          } else if (player === '') {
+            setPlayer(playerInfo.name);
           }
         }
         if ( ! arraysEqual(newOpponents, opponents)) {
