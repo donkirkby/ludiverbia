@@ -66,7 +66,7 @@ export default function QuizlApp(props) {
         for (const [playerId, playerInfo] of playerEntries) {
           if (playerId !== dataSource.userId) {
             const oldOpponent = oldOpponents[playerId] || {},
-              newOpponent = Object.assign({}, oldOpponent);
+              newOpponent = Object.assign({letters: {}}, oldOpponent);
             if (playerInfo.name !== oldOpponent.name) {
               newOpponent.name = playerInfo.name;
               newOpponent.id = playerId;
