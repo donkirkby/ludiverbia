@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { set, update, ref, child, off, onValue } from '@firebase/database';
+import { set, push, ref, child, off, onValue } from '@firebase/database';
 
 import './App.css';
 import './QuizlApp.css';
@@ -9,6 +9,7 @@ export default function QuizlApp(props) {
     const [letters, setLetters] = useState({}),
       [player, setPlayer] = useState(''),
       [isReady, setReady] = useState(false),
+      [hits, setHits] = useState([]),
 
       // [{id: id, name: name, letters: {label: letter}}]
       [opponents, setOpponents] = useState([]),
@@ -30,6 +31,7 @@ export default function QuizlApp(props) {
     }
 
     return <div className="quizl-outer">
+      <div className="quizl-grids">
         <QuizlGrid
           player={player}
           onPlayerChange={setPlayer}
@@ -46,7 +48,11 @@ export default function QuizlApp(props) {
             onHit={handleHit}
             disabled={ ! isReady}/>
         ))}
-      </div>;
+      </div>
+      <div className="quizl-hits">
+        {hits.map((hit, i) => <p key={`hit${i}`}>{hit}</p>)}
+      </div>
+    </div>;
 
     function handleLettersChange(newLetters) {
       setLetters(newLetters);
@@ -95,11 +101,7 @@ export default function QuizlApp(props) {
 
     function handleHit(label) {
       if (requestsRef) {
-        update(
-          child(requestsRef, dataSource.userId),
-          {
-            [label]: true
-          });
+        push(requestsRef, {player: dataSource.userId, label: label});
       }
     }
 
@@ -108,26 +110,38 @@ export default function QuizlApp(props) {
       if (requestsInfo === null || ! isReady) {
           return;
       }
-      let hasChanged = false;
+      let hasResponseChanged = false;
       const response = {},
-        newLetters = Object.assign({}, letters);
-      for (const [playerId, labels] of Object.entries(requestsInfo)) {
-        if (playerId === dataSource.userId) {
+        newLetters = Object.assign({}, letters),
+        playerNames = Object.fromEntries(opponents.map(
+          opponent => [opponent.id, opponent.name])),
+        requestValues = Object.values(requestsInfo),
+        newHits = [];
+      playerNames[dataSource.userId] = player;
+      let haveHitsChanged = requestValues.length !== hits.length;
+      for (const request of requestValues) {
+        const playerName = playerNames[request.player],
+          hitText = `${playerName} hit ${request.label}`,
+          hitIndex = newHits.length;
+        newHits.push(hitText);
+        haveHitsChanged = haveHitsChanged || hitText !== hits[hitIndex];
+        if (request.player === dataSource.userId) {
           continue;
         }
-        for (const label of Object.keys(labels)) {
-          const letter = letters[label] || '?',
-            upperLetter = letter.toUpperCase();
-          response[label] = upperLetter;
-          if (letter !== upperLetter) {
-            hasChanged = true;
-            newLetters[label] = upperLetter;
-          }
+        const letter = letters[request.label] || '?',
+          upperLetter = letter.toUpperCase();
+        response[request.label] = upperLetter;
+        if (letter !== upperLetter) {
+          hasResponseChanged = true;
+          newLetters[request.label] = upperLetter;
         }
       }
-      if (hasChanged) {
+      if (hasResponseChanged) {
         setLetters(newLetters);
         set(child(responsesRef, dataSource.userId), response);
+      }
+      if (haveHitsChanged) {
+        setHits(newHits);
       }
     }
 

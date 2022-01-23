@@ -40,3 +40,7 @@
 .quizl {
     box-sizing: content-box;
 }
+
+.quizl-outer {
+    display: flex;
+}
