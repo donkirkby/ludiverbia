@@ -10,7 +10,7 @@ Welcome, ludiverbalists! This will be a collection of word games that you can
 play in your browser or on mobile. The games, so far
 
 * [Halfabet] - a very divisive word game (first playable version)
-* [Quizl] - hunt in the grid for your opponent's word (under construction)
+* [Quizl] - Battleships / Salvo as a word game (first playable version)
 
 While you're waiting for more games to get added, you might enjoy my old
 collection: [Vograbulary]. Josh Wardle's [Wordle] is very popular, have you
