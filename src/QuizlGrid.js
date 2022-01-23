@@ -115,8 +115,10 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
 export function QuizlGrid(props) {
     const containers = [],
       [draggedLetter, setDraggedLetter] = useState(null),
-      letterLabels = invertMap(props.letters),
-      isGridFull = Object.entries(props.letters).length === 25;
+      upperLetters = Object.fromEntries(Object.entries(props.letters).map(
+        ([space, letter]) => [space, letter.toUpperCase()])),
+      letterLabels = invertMap(upperLetters),
+      isGridFull = Object.entries(upperLetters).length === 25;
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
@@ -125,6 +127,7 @@ export function QuizlGrid(props) {
           isSpacer = defaultIndex === -1 && (
             row === 0 || row === size-1 || row === size-2 || column === size-2);
         let tile = null, className = '', letter = null, disabled = false;
+        let onClick = null, isHidden = false;
         if (defaultIndex !== -1) {
           className = 'home';
           letter = String.fromCharCode(65+defaultIndex);
@@ -134,25 +137,33 @@ export function QuizlGrid(props) {
           else {
             disabled = props.isReady;
           }
+          isHidden = props.isReady;
         }
         else if (isSpacer) {
           className = 'spacer';
         }
         else {
           className = 'cell';
-          letter = props.letters[spaceLabel] || null;
+          letter = upperLetters[spaceLabel] || null;
           if (letter) {
             disabled = props.isReady;
+            isHidden = letter !== props.letters[spaceLabel];
           }
           else if (props.isReady) {
             letter = spaceLabel;
             disabled = props.disabled;
+            onClick = handleHit;
           }
         }
         if (letter !== null && letter !== draggedLetter) {
           const tileId = 'tile' + letter,
             dragId = 'drag' + letter;
-          tile = <LetterTile key={tileId} text={letter} disabled={disabled}/>;
+          tile = <LetterTile
+            key={tileId}
+            text={letter}
+            isHidden={isHidden}
+            disabled={disabled}
+            onClick={onClick}/>;
           if ( ! props.isReady) {
             tile = <Draggable key={dragId} id={dragId}>
               <div className="draggable-letter">
@@ -211,6 +222,12 @@ export function QuizlGrid(props) {
         return;
       }
       setDraggedLetter(event.active.id.slice(-1));
+    }
+
+    function handleHit(event) {
+      if (props.onHit) {
+        props.onHit(event.target.innerText);
+      }
     }
     
     function handleDragEnd(event) {
