@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { set, push, ref, child, off, onValue } from '@firebase/database';
 
 import './App.css';
 import './QuizlApp.css';
+import { PlayerSet } from './PlayerSet'
 import { QuizlGrid } from './QuizlGrid';
 
 export default function QuizlApp(props) {
@@ -13,6 +14,7 @@ export default function QuizlApp(props) {
 
       // [{id: id, name: name, letters: {label: letter}}]
       [opponents, setOpponents] = useState([]),
+      [gameId, setGameId] = useState(''),
       dataSource = props.dataSource,
       singletonRef = dataSource && dataSource.check() &&
         ref(dataSource.database, 'singleton/quizl'),
@@ -32,6 +34,11 @@ export default function QuizlApp(props) {
 
     return <div className="quizl-outer">
       <div className="quizl-grids">
+        <PlayerSet
+          dataSource={dataSource}
+          gameType="quizl"
+          gameId={gameId}
+          onGameIdChange={setGameId}/>
         <QuizlGrid
           player={player}
           onPlayerChange={setPlayer}
