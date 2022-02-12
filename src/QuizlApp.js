@@ -93,16 +93,10 @@ export default function QuizlApp(props) {
     }
 
     function handleReady() {
-      /*
-      if (playersRef) {
-        const playerRef = child(playersRef, dataSource.userId);
-        set(playerRef, {name: player});
-      }
       const newLetters = Object.fromEntries(Object.entries(letters).map(
         ([label, letter]) => [label, letter.toLowerCase()]));
       setReady(true);
       setLetters(newLetters);
-      */
     }
 
     function handleHit(label) {

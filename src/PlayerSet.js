@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, child, push, set, onValue } from "firebase/database";
+import { ref, child, push, set, onValue, remove } from "firebase/database";
 
 /** Create a set of players and a waiting room.
  * 
@@ -159,15 +159,12 @@ export function PlayerSet(props) {
         props.onGameIdChange('');
         setConnected(false);
         setOwner(false);
+        setWaiting(false);
     }
 
     function handleWaitingChange(snapshot) {
-        const newWaiting = snapshot.val();
-        if (newWaiting === null) {
-            return;
-        }
-        
-        const oldEntries = Object.entries(waiting),
+        const newWaiting = snapshot.val() || {},
+          oldEntries = Object.entries(waiting),
           newEntries = Object.entries(newWaiting);
         let hasChanged = newEntries.length !== oldEntries.length;
         for (let i = 0; i < newEntries.length && ! hasChanged; i++) {
@@ -183,6 +180,7 @@ export function PlayerSet(props) {
     function handleAllowClick(event) {
         const playerId = event.target.attributes['data-player'].value,
             playerName = waiting[playerId],
+            waiterRef = child(waitingRef, playerId),
             playerRef = child(playingRef, playerId);
         let seat = 0;
         for (; seat < players.length; seat++) {
@@ -191,6 +189,7 @@ export function PlayerSet(props) {
             }
         }
         set(playerRef, {name: playerName, seat: seat});
+        remove(waiterRef);
     }
 
     function handleMyPlayingChange(snapshot) {
