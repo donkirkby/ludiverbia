@@ -184,12 +184,6 @@ export function QuizlGrid(props) {
       <form onSubmit={handleReady} className="quizl">
         {props.isReady ? <p>{props.player}</p> : (
           <div className="player">
-            <input
-              className="input is-large"
-              type="text"
-              placeholder="Your Name"
-              value={props.player}
-              onChange={handlePlayerChange}/>
             <button
               className="button is-large is-primary"
               disabled={ ! isGridFull}>Ready</button>
@@ -208,10 +202,6 @@ export function QuizlGrid(props) {
         </DndContext>
       </form>
     );
-
-    function handlePlayerChange(event) {
-      props.onPlayerChange(event.target.value);
-    }
 
     function handleFill() {
       props.onLettersChange(fillLetters(props.letters));

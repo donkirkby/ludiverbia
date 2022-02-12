@@ -1,0 +1,34 @@
+{
+  "comment": "This is a copy of the Firebase access rules.",
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "singleton": {
+        ".read": true,
+        ".write": true
+    },
+    "games": {
+      "$gameType" : {
+        "$gameId": {
+          ".write": "data.child('owner').val() === auth.uid ||(!data.exists()&&newData.child('owner').val() === auth.uid)",
+          ".read": "data.child('playing').child(auth.uid).exists()",
+          "waiting": {
+            "$uid": {
+              ".write": "$uid === auth.uid"
+            }
+          },
+          "requests": {
+            "$requestId": {
+              ".write": "data.parent().parent().child('playing').child(auth.uid).exists() && !data.exists() && newData.child('player').val()===auth.uid"
+            }
+          },
+          "responses": {
+            "$playerId": {
+              ".write": "data.parent().parent().child('playing').child(auth.uid).exists() && $playerId===auth.uid"
+            }
+          }
+        }
+      }
+    }
+  }
+}

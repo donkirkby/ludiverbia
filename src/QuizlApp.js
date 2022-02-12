@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { set, push, ref, child, off, onValue } from '@firebase/database';
 
 import './App.css';
 import './QuizlApp.css';
+import { PlayerSet } from './PlayerSet'
 import { QuizlGrid } from './QuizlGrid';
 
 export default function QuizlApp(props) {
     const [letters, setLetters] = useState({}),
       [player, setPlayer] = useState(''),
+      [players, setPlayers] = useState([]),
       [isReady, setReady] = useState(false),
       [hits, setHits] = useState([]),
 
       // [{id: id, name: name, letters: {label: letter}}]
       [opponents, setOpponents] = useState([]),
+      [gameId, setGameId] = useState(''),
       dataSource = props.dataSource,
-      singletonRef = dataSource && dataSource.check() &&
-        ref(dataSource.database, 'singleton/quizl'),
-      playersRef = singletonRef && child(singletonRef, 'players'),
-      requestsRef = singletonRef && child(singletonRef, 'requests'),
-      responsesRef = singletonRef && child(singletonRef, 'responses');
+      quizlRef = dataSource && dataSource.check() &&
+        ref(dataSource.database, 'games/quizl'),
+      gameRef = quizlRef && gameId && child(quizlRef, gameId),
+      requestsRef = gameRef && child(gameRef, 'requests'),
+      responsesRef = gameRef && child(gameRef, 'responses');
     
-    if (singletonRef) {
-      const playersRef = child(singletonRef, 'players');
-      off(playersRef);
-      onValue(playersRef, handlePlayersChange);
+    if (gameRef) {
       off(requestsRef);
       onValue(requestsRef, handleRequestsChange);
       off(responsesRef);
@@ -32,6 +32,13 @@ export default function QuizlApp(props) {
 
     return <div className="quizl-outer">
       <div className="quizl-grids">
+        <PlayerSet
+          dataSource={dataSource}
+          gameType="quizl"
+          gameId={gameId}
+          onGameIdChange={setGameId}
+          players={players}
+          onPlayersChange={handlePlayersChange}/>
         <QuizlGrid
           player={player}
           onPlayerChange={setPlayer}
@@ -58,41 +65,34 @@ export default function QuizlApp(props) {
       setLetters(newLetters);
     }
 
-    function handlePlayersChange(snapshot) {
-        const playersInfo = snapshot.val();
-        if (playersInfo === null) {
-            return;
-        }
+    function handlePlayersChange(newPlayers) {
         const oldOpponents = Object.fromEntries(opponents.map(
             opponent => [opponent.id, opponent])),
-          playerEntries = Object.entries(playersInfo),
           newOpponents = [];
-        let hasChanged = playerEntries.length !== opponents.length + 1;
+        let hasChanged = newPlayers.length !== opponents.length + 1;
         
-        for (const [playerId, playerInfo] of playerEntries) {
-          if (playerId !== dataSource.userId) {
-            const oldOpponent = oldOpponents[playerId] || {},
+        for (const playerInfo of newPlayers) {
+          if (playerInfo.id !== dataSource.userId) {
+            const oldOpponent = oldOpponents[playerInfo.id] || {},
               newOpponent = Object.assign({letters: {}}, oldOpponent);
             if (playerInfo.name !== oldOpponent.name) {
               newOpponent.name = playerInfo.name;
-              newOpponent.id = playerId;
+              newOpponent.id = playerInfo.id;
               hasChanged = true;
             }
             newOpponents.push(newOpponent);
-          } else if (player === '') {
+          } else if (player !== playerInfo.name) {
             setPlayer(playerInfo.name);
+            hasChanged = true;
           }
         }
         if (hasChanged) {
           setOpponents(newOpponents);
+          setPlayers(newPlayers);
         }
     }
 
     function handleReady() {
-      if (playersRef) {
-        const playerRef = child(playersRef, dataSource.userId);
-        set(playerRef, {name: player});
-      }
       const newLetters = Object.fromEntries(Object.entries(letters).map(
         ([label, letter]) => [label, letter.toLowerCase()]));
       setReady(true);
