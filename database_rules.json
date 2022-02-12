@@ -17,6 +17,11 @@
               ".write": "$uid === auth.uid"
             }
           },
+          "playing": {
+            "$uid": {
+              ".read": "$uid === auth.uid"
+            }
+          },
           "requests": {
             "$requestId": {
               ".write": "data.parent().parent().child('playing').child(auth.uid).exists() && !data.exists() && newData.child('player').val()===auth.uid"
