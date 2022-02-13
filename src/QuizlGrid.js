@@ -119,6 +119,7 @@ export function QuizlGrid(props) {
         ([space, letter]) => [space, letter.toUpperCase()])),
       letterLabels = invertMap(upperLetters),
       isGridFull = Object.entries(upperLetters).length === 25;
+    let hiddenCount = 0;
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
@@ -126,8 +127,12 @@ export function QuizlGrid(props) {
           defaultIndex = defaultPositions.indexOf(coordinateText),
           isSpacer = defaultIndex === -1 && (
             row === 0 || row === size-1 || row === size-2 || column === size-2);
-        let tile = null, className = '', letter = null, disabled = false;
-        let onClick = null, isHidden = false;
+        let tile = null,
+          className = '',
+          letter = null,
+          disabled = false,
+          onClick = null,
+          isHidden = false;
         if (defaultIndex !== -1) {
           className = 'home';
           letter = String.fromCharCode(65+defaultIndex);
@@ -148,11 +153,15 @@ export function QuizlGrid(props) {
           if (letter) {
             disabled = props.isReady;
             isHidden = letter !== props.letters[spaceLabel];
+            if (isHidden) {
+              hiddenCount++;
+            }
           }
           else if (props.isReady) {
             letter = spaceLabel;
             disabled = props.disabled;
             onClick = handleHit;
+            hiddenCount++;
           }
         }
         if (letter !== null && letter !== draggedLetter) {
@@ -181,14 +190,16 @@ export function QuizlGrid(props) {
     }
 
     return (
-      <form onSubmit={handleReady} className="quizl">
-        {props.isReady ? <p>{props.player}</p> : (
+      <form onSubmit={handleReady}
+        className="quizl tile notification is-child is-primary is-light">
+        <p>{props.player} {hiddenCount || ''}</p>
+        {props.isReady || (
           <div className="player">
             <button
-              className="button is-large is-primary"
+              className="button is-large is-primary m-1"
               disabled={ ! isGridFull}>Ready</button>
             <button
-              className="button is-large is-primary"
+              className="button is-large is-primary m-1"
               onClick={handleFill}
               disabled={isGridFull}>Fill</button>
           </div>)}

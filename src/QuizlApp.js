@@ -20,6 +20,9 @@ export default function QuizlApp(props) {
       quizlRef = dataSource && dataSource.check() &&
         ref(dataSource.database, 'games/quizl'),
       gameRef = quizlRef && gameId && child(quizlRef, gameId),
+      readyRef = gameRef && child(
+        gameRef,
+        `playing/${dataSource.userId}/isReady`),
       requestsRef = gameRef && child(gameRef, 'requests'),
       responsesRef = gameRef && child(gameRef, 'responses');
     
@@ -30,8 +33,8 @@ export default function QuizlApp(props) {
       onValue(responsesRef, handleResponsesChange);
     }
 
-    return <div className="quizl-outer">
-      <div className="quizl-grids">
+    return <div className="quizl-outer tile is-ancestor">
+      <div className="quizl-grids tile is-parent is-vertical">
         <PlayerSet
           dataSource={dataSource}
           gameType="quizl"
@@ -47,7 +50,12 @@ export default function QuizlApp(props) {
           isReady={isReady}
           onReady={handleReady}/>
         {opponents.map((opponent, i) => (
-          <QuizlGrid
+          ! opponent.isReady
+          ? <p key={`opponent${i}`}
+              className="quizl tile notification is-child is-light">
+              {opponent.name}
+            </p>
+          : <QuizlGrid
             key={`opponent${i}`}
             player={opponent.name}
             letters={opponent.letters}
@@ -66,28 +74,42 @@ export default function QuizlApp(props) {
     }
 
     function handlePlayersChange(newPlayers) {
-        const oldOpponents = Object.fromEntries(opponents.map(
-            opponent => [opponent.id, opponent])),
-          newOpponents = [];
-        let hasChanged = newPlayers.length !== opponents.length + 1;
+        const newPlayer = newPlayers[0],
+          newOpponents = newPlayers.slice(1).map(playerInfo => Object.assign(
+            {letters: {}},
+            playerInfo)),
+            hasPlayerChanged = newPlayer.name !== player;
+        let haveOpponentsChanged = newOpponents.length !== opponents.length;
+
+        if (hasPlayerChanged) {
+          setPlayer(newPlayer.name);
+        }
         
-        for (const playerInfo of newPlayers) {
-          if (playerInfo.id !== dataSource.userId) {
-            const oldOpponent = oldOpponents[playerInfo.id] || {},
-              newOpponent = Object.assign({letters: {}}, oldOpponent);
-            if (playerInfo.name !== oldOpponent.name) {
-              newOpponent.name = playerInfo.name;
-              newOpponent.id = playerInfo.id;
-              hasChanged = true;
+        for (let i = 0; i < newOpponents.length && ! haveOpponentsChanged; i++) {
+          const oldOpponent = opponents[i],
+            newOpponent = newOpponents[i],
+            oldEntries = Object.entries(oldOpponent),
+            newEntries = Object.entries(newOpponent);
+          
+          if (oldEntries.length !== newEntries.length) {
+            haveOpponentsChanged = true;
+            break;
+          }
+          for (let j = 0; j < oldEntries.length; j++) {
+            const oldEntry = oldEntries[j],
+              newEntry = newEntries[j];
+            if (newEntry.id !== oldEntry.id ||
+                newEntry.name !== oldEntry.name ||
+                newEntry.isReady !== oldEntry.isReady) {
+                  haveOpponentsChanged = true;
+                  break;
             }
-            newOpponents.push(newOpponent);
-          } else if (player !== playerInfo.name) {
-            setPlayer(playerInfo.name);
-            hasChanged = true;
           }
         }
-        if (hasChanged) {
+        if (haveOpponentsChanged) {
           setOpponents(newOpponents);
+        }
+        if (haveOpponentsChanged || hasPlayerChanged) {
           setPlayers(newPlayers);
         }
     }
@@ -97,6 +119,7 @@ export default function QuizlApp(props) {
         ([label, letter]) => [label, letter.toLowerCase()]));
       setReady(true);
       setLetters(newLetters);
+      set(readyRef, true);
     }
 
     function handleHit(label) {

@@ -40,24 +40,29 @@ export function PlayerSet(props) {
                     value={playerName}
                     disabled={isConnected}
                     onChange={handlePlayerNameChange}/>
-                <button
-                    type="button"
-                    onClick={handleStart}
-                    disabled={isConnected || ! (playerName && gameListRef)}
-                    className="button is-large is-primary">Start</button>
                 <input
                     type="text"
                     className="input is-large"
-                    placeholder="Type game id here."
+                    placeholder="Game id (if joining)"
                     value={props.gameId}
                     readOnly={isConnected}
                     onChange={handleGameIdChange}
                     onKeyPress={handleGameIdKeyPress}/>
                 <button
                     type="button"
+                    onClick={handleStart}
+                    disabled={
+                        isConnected ||
+                        props.gameId ||
+                        ! (playerName && gameListRef)}
+                    className="button is-large is-primary m-1">Start</button>
+                <button
+                    type="button"
                     onClick={handleJoin}
-                    disabled={isConnected || ! (props.gameId && gameListRef)}
-                    className="button is-large is-primary">Join</button>
+                    disabled={
+                        isConnected ||
+                        ! (props.gameId && playerName && gameListRef)}
+                    className="button is-large is-primary m-1">Join</button>
             </div>,
         waitingEntries = Object.entries(waiting);
     waitingEntries.sort((a, b) => (
@@ -80,11 +85,6 @@ export function PlayerSet(props) {
                     className="button is-primary is-small"
                     onClick={handleAllowClick}>Allow</button>
                 </p>
-            )),
-        playingList = ! isConnected
-            ? null
-            : players.map(entry =>  (
-                <p key={`playing_${entry.id}`}>{ entry.name }</p>
             ));
     useEffect(() => {
         if ( ! gameRef) {
@@ -119,10 +119,9 @@ export function PlayerSet(props) {
         };
     });
     
-    return <div>
+    return <div className="tile is-child notification is-light">
         {gameHeader}
         {waitingList}
-        {playingList}
     </div>
 
     function handlePlayerNameChange(event) {
@@ -202,29 +201,54 @@ export function PlayerSet(props) {
     }
 
     function handlePlayingChange(snapshot) {
-        const dbPlaying = snapshot.val();
-        if (dbPlaying === null) {
-            return;
-        }
-        
-        const newPlayers = [],
-            dbEntries = Object.entries(dbPlaying);
-        let hasChanged = dbEntries.length !== players.length;
-        for (const [playerId, playerInfo] of dbEntries) {
-            const oldEntry = players[playerInfo.seat];
-            newPlayers.push({id: playerId, name: playerInfo.name});
-            hasChanged = (
-                hasChanged ||
-                playerId !== oldEntry.id ||
-                playerInfo.name !== oldEntry.name);
-        }
+        const playerId = dataSource.check() && dataSource.userId,
+            newPlayers = buildPlayers(snapshot.val(), players, playerId);
 
-        if (hasChanged && props.onPlayersChange) {
+        if (newPlayers && props.onPlayersChange) {
             props.onPlayersChange(newPlayers);
         }
     }
 
     function handleDbCancel(error) {
         console.log(`Database subscription cancelled: ${error}`);
+    }
+}
+
+export function buildPlayers(dbData, oldPlayers, playerId) {
+    const dbEntries = (dbData && Object.entries(dbData)) || [],
+        newPlayers = [];
+    dbEntries.sort((a, b) => (a[1].seat - b[1].seat));
+    for (let i = 0; i < dbEntries.length; i++) {
+        if (dbEntries[0][0] === playerId) {
+            break;
+        }
+        dbEntries.push(dbEntries.shift());
+    }
+    let isChanged = dbEntries.length !== oldPlayers.length;
+    for (let i = 0; i < dbEntries.length; i++) {
+        const oldPlayer = oldPlayers[i],
+            entry = dbEntries[i],
+            newPlayer = Object.assign({id: entry[0]}, entry[1]);
+        if ( ! isChanged) {
+            const oldPlayerEntries = Object.entries(oldPlayer),
+                newPlayerEntries = Object.entries(newPlayer);
+            if (isChanged || oldPlayerEntries.length !== newPlayerEntries.length) {
+                isChanged = true;
+            }
+            else {
+                for (let j = 0; j < oldPlayerEntries.length; j++) {
+                    const [fieldName, oldValue] = oldPlayerEntries[j],
+                        newValue = newPlayer[fieldName];
+                    if (newValue !== oldValue) {
+                        isChanged = true;
+                        break;
+                    }
+                }
+            }
+        }
+        newPlayers.push(newPlayer);
+    }
+    if (isChanged) {
+        return newPlayers;
     }
 }

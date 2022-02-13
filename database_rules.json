@@ -19,7 +19,10 @@
           },
           "playing": {
             "$uid": {
-              ".read": "$uid === auth.uid"
+              ".read": "$uid === auth.uid",
+              "isReady": {
+                ".write": "$uid === auth.uid && data.parent().exists()"
+              }
             }
           },
           "requests": {
