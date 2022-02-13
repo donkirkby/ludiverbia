@@ -104,6 +104,7 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
  * @param props.onLettersChange - callback when letters change
  * @param props.player - player name
  * @param props.onPlayerChange - callback when name changes
+ * @param props.isNext - true if this player should play next
  * @param props.isReady - true if Ready button has been clicked, or grid
  *  belongs to an opponent
  * @param props.onReady - callback when Ready button is clicked
@@ -188,11 +189,12 @@ export function QuizlGrid(props) {
           </LetterSpace>);
       }
     }
+    const colourClass = props.isNext ? 'is-primary' : ''
 
     return (
       <form onSubmit={handleReady}
-        className="quizl tile notification is-child is-primary is-light">
-        <p>{props.player} {hiddenCount || ''}</p>
+        className={`quizl tile notification is-child ${colourClass} is-light`}>
+        <p>{props.player} {hiddenCount || ''} {props.isNext}</p>
         {props.isReady || (
           <div className="player">
             <button

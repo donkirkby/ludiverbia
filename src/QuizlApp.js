@@ -13,9 +13,13 @@ export default function QuizlApp(props) {
       [isReady, setReady] = useState(false),
       [hits, setHits] = useState([]),
 
+      // {playerId: hitCount}
+      [hitCounts, setHitCounts] = useState({}),
+
       // [{id: id, name: name, letters: {label: letter}}]
       [opponents, setOpponents] = useState([]),
       [gameId, setGameId] = useState(''),
+      [nextPlayerId, setNextPlayerId] = useState(),
       dataSource = props.dataSource,
       quizlRef = dataSource && dataSource.check() &&
         ref(dataSource.database, 'games/quizl'),
@@ -47,6 +51,7 @@ export default function QuizlApp(props) {
           onPlayerChange={setPlayer}
           letters={letters}
           onLettersChange={handleLettersChange}
+          isNext={dataSource.userId === nextPlayerId}
           isReady={isReady}
           onReady={handleReady}/>
         {opponents.map((opponent, i) => (
@@ -59,6 +64,7 @@ export default function QuizlApp(props) {
             key={`opponent${i}`}
             player={opponent.name}
             letters={opponent.letters}
+            isNext={opponent.id === nextPlayerId}
             isReady={true}
             onHit={handleHit}
             disabled={ ! isReady}/>
@@ -74,10 +80,11 @@ export default function QuizlApp(props) {
     }
 
     function handlePlayersChange(newPlayers) {
-        const newPlayer = newPlayers[0],
-          newOpponents = newPlayers.slice(1).map(playerInfo => Object.assign(
+        const newOpponents = newPlayers.map(playerInfo => Object.assign(
             {letters: {}},
-            playerInfo)),
+            playerInfo));
+        chooseNextPlayer(newOpponents, hitCounts);
+        const newPlayer = newOpponents.shift(),
             hasPlayerChanged = newPlayer.name !== player;
         let haveOpponentsChanged = newOpponents.length !== opponents.length;
 
@@ -112,6 +119,11 @@ export default function QuizlApp(props) {
         if (haveOpponentsChanged || hasPlayerChanged) {
           setPlayers(newPlayers);
         }
+
+        const newNextPlayerId = chooseNextPlayer(players, hitCounts);
+        if (newNextPlayerId !== nextPlayerId) {
+          setNextPlayerId(newNextPlayerId);
+        }
     }
 
     function handleReady() {
@@ -139,7 +151,8 @@ export default function QuizlApp(props) {
         playerNames = Object.fromEntries(opponents.map(
           opponent => [opponent.id, opponent.name])),
         requestValues = Object.values(requestsInfo),
-        newHits = [];
+        newHits = [],
+        newHitCounts = {};
       playerNames[dataSource.userId] = player;
       let haveHitsChanged = requestValues.length !== hits.length;
       for (const request of requestValues) {
@@ -148,6 +161,7 @@ export default function QuizlApp(props) {
           hitIndex = newHits.length;
         newHits.push(hitText);
         haveHitsChanged = haveHitsChanged || hitText !== hits[hitIndex];
+        newHitCounts[request.player] = (newHitCounts[request.player] || 0) + 1;
         if (request.player === dataSource.userId) {
           continue;
         }
@@ -165,6 +179,11 @@ export default function QuizlApp(props) {
       }
       if (haveHitsChanged) {
         setHits(newHits);
+        setHitCounts(newHitCounts);
+        const newNextPlayerId = chooseNextPlayer(players, newHitCounts);
+        if (newNextPlayerId !== nextPlayerId) {
+          setNextPlayerId(newNextPlayerId);
+        }
       }
     }
 
@@ -199,4 +218,34 @@ export default function QuizlApp(props) {
         setOpponents(newOpponents);
       }
     }
+}
+
+/** Choose one of the players to go next.
+ * @param players: [{seat, id, letters: {label: letter}}] letters are lower case
+ *  if hidden
+ * @param hitCounts: {playerId: count}
+ * @returns: id of chosen player.
+ */
+export function chooseNextPlayer(players, hitCounts) {
+  if ( ! players.length) {
+    return;
+  }
+  let chosen = 0,
+    minCount = hitCounts[players[0].id] || 0;
+
+  for (let i = 1; i < players.length; i++) {
+    const player = players[i],
+      playerCount = hitCounts[player.id] || 0;
+    if (minCount < playerCount) {
+      // not chosen
+    }
+    else if (playerCount < minCount) {
+      minCount = playerCount;
+      chosen = i;
+    }
+    else if (player.seat < players[chosen].seat) {
+      chosen = i;
+    }
+  }
+  return players[chosen].id;
 }
