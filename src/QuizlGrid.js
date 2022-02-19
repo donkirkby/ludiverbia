@@ -105,6 +105,7 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
  * @param props.player - player name
  * @param props.onPlayerChange - callback when name changes
  * @param props.isNext - true if this player should play next
+ * @param props.isConnected - true if the Ready button could be clicked
  * @param props.isReady - true if Ready button has been clicked, or grid
  *  belongs to an opponent
  * @param props.onReady - callback when Ready button is clicked
@@ -199,7 +200,7 @@ export function QuizlGrid(props) {
           <div className="player">
             <button
               className="button is-large is-primary m-1"
-              disabled={ ! isGridFull}>Ready</button>
+              disabled={ ! (isGridFull && props.isConnected)}>Ready</button>
             <button
               className="button is-large is-primary m-1"
               onClick={handleFill}

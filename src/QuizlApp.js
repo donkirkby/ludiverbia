@@ -52,6 +52,7 @@ export default function QuizlApp(props) {
           letters={letters}
           onLettersChange={handleLettersChange}
           isNext={dataSource.userId === nextPlayerId}
+          isConnected={gameId !== ''}
           isReady={isReady}
           onReady={handleReady}/>
         {opponents.map((opponent, i) => (
