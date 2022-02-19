@@ -11,21 +11,23 @@ import { ref, child, push, set, onValue, remove } from "firebase/database";
  * @param props.onPlayersChange - when database updates
  */
 export function PlayerSet(props) {
-    const [playerName, setPlayerName] = useState(''),
+    const [newGameId, setNewGameId] = useState(props.gameId || ''),
+        [playerName, setPlayerName] = useState(''),
         [isConnected, setConnected] = useState(false),
         [isOwner, setOwner] = useState(false),
         [isPlaying, setPlaying] = useState(false),
         [waiting, setWaiting] = useState({}),
         dataSource = props.dataSource,
         players = props.players || [],
+        gameId = props.gameId || newGameId,
         gameListRef = dataSource && dataSource.check() && props.gameType &&
           ref(dataSource.database, 'games/' + props.gameType),
-        gameRef = isConnected && gameListRef && child(gameListRef, props.gameId),
+        gameRef = isConnected && gameListRef && child(gameListRef, gameId),
         waitingRef = gameRef && child(gameRef, 'waiting'),
         playingRef = gameRef && child(gameRef, 'playing'),
         gameHeader = isConnected
             ? <div>
-                <p>Game id: {props.gameId}</p>
+                <p>Game id: {gameId}</p>
                 <button
                     type="button"
                     onClick={handleLeave}
@@ -44,7 +46,7 @@ export function PlayerSet(props) {
                     type="text"
                     className="input is-large"
                     placeholder="Game id (if joining)"
-                    value={props.gameId}
+                    value={newGameId}
                     readOnly={isConnected}
                     onChange={handleGameIdChange}
                     onKeyPress={handleGameIdKeyPress}/>
@@ -53,7 +55,7 @@ export function PlayerSet(props) {
                     onClick={handleStart}
                     disabled={
                         isConnected ||
-                        props.gameId ||
+                        newGameId ||
                         ! (playerName && gameListRef)}
                     className="button is-large is-primary m-1">Start</button>
                 <button
@@ -61,7 +63,7 @@ export function PlayerSet(props) {
                     onClick={handleJoin}
                     disabled={
                         isConnected ||
-                        ! (props.gameId && playerName && gameListRef)}
+                        ! (newGameId && playerName && gameListRef)}
                     className="button is-large is-primary m-1">Join</button>
             </div>,
         waitingEntries = Object.entries(waiting);
@@ -131,6 +133,7 @@ export function PlayerSet(props) {
     function handleStart() {
         const gameRef = push(gameListRef, {
                 owner: dataSource.userId,
+                startDate: new Date().toISOString(),
                 playing: {[dataSource.userId]: {name: playerName, seat: 0}}
             });
         setConnected(true);
@@ -139,7 +142,7 @@ export function PlayerSet(props) {
     }
 
     function handleGameIdChange(event) {
-        props.onGameIdChange(event.target.value);
+        setNewGameId(event.target.value);
     }
 
     function handleGameIdKeyPress() {
@@ -147,7 +150,7 @@ export function PlayerSet(props) {
     }
 
     function handleJoin() {
-        const gameRef = child(gameListRef, props.gameId),
+        const gameRef = child(gameListRef, newGameId),
             waitingRef = child(gameRef, 'waiting'),
             playerRef = child(waitingRef, dataSource.userId);
         set(playerRef, playerName);
@@ -198,6 +201,10 @@ export function PlayerSet(props) {
         }
         
         setPlaying(true);
+        if (newGameId) {
+            props.onGameIdChange(newGameId);
+        }
+        setNewGameId('');
     }
 
     function handlePlayingChange(snapshot) {
