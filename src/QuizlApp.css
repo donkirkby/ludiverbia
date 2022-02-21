@@ -37,7 +37,7 @@
     margin: 5px;
 }
 
-.letter-space {
+.letter-space, .letter-tile {
     box-sizing: content-box;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {DndContext, DragOverlay} from '@dnd-kit/core';
+import {DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors} from '@dnd-kit/core';
 
 import {LetterSpace} from './LetterSpace';
 import {LetterTile} from './LetterTile';
@@ -115,7 +115,8 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
  *  label
  */
 export function QuizlGrid(props) {
-    const containers = [],
+    const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor)),
+      containers = [],
       [draggedLetter, setDraggedLetter] = useState(null),
       upperLetters = Object.fromEntries(Object.entries(props.letters).map(
         ([space, letter]) => [space, letter.toUpperCase()])),
@@ -206,7 +207,9 @@ export function QuizlGrid(props) {
               onClick={handleFill}
               disabled={isGridFull}>Fill</button>
           </div>)}
-        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}>
           <div className="board">
             {containers}
           </div>
