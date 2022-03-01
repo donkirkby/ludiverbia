@@ -220,7 +220,8 @@ export function QuizlGrid(props) {
       </form>
     );
 
-    function handleFill() {
+    function handleFill(event) {
+      event.preventDefault();
       props.onLettersChange(fillLetters(props.letters));
     }
 
