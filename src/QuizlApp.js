@@ -4,19 +4,33 @@ import { set, push, ref, child, off, onValue } from '@firebase/database';
 import './App.css';
 import './QuizlApp.css';
 import { PlayerSet } from './PlayerSet'
-import { QuizlGrid } from './QuizlGrid';
+import { QuizlGrid, scoreGuess } from './QuizlGrid';
 
 export default function QuizlApp(props) {
     const [letters, setLetters] = useState({}),
       [player, setPlayer] = useState(''),
+
+      /* [{id: id,
+       *   isReady: isReady,
+       *   name: name,
+       *   seat: seat,
+       *   score: score,
+       *   guesses: [guessDisplay]}]
+       */
       [players, setPlayers] = useState([]),
       [isReady, setReady] = useState(false),
+      [isSolved, setSolved] = useState(false),
       [hits, setHits] = useState([]),
 
       // {playerId: hitCount}
       [hitCounts, setHitCounts] = useState({}),
 
-      // [{id: id, name: name, letters: {label: letter}}]
+      /* [{id: id,
+       *   isReady: isReady,
+       *   letters: {label: letter},
+       *   name: name,
+       *   seat: seat
+       */
       [opponents, setOpponents] = useState([]),
       [gameId, setGameId] = useState(''),
       [nextPlayerId, setNextPlayerId] = useState(),
@@ -31,10 +45,10 @@ export default function QuizlApp(props) {
       responsesRef = gameRef && child(gameRef, 'responses');
     
     if (gameRef) {
-      off(requestsRef);
-      onValue(requestsRef, handleRequestsChange);
       off(responsesRef);
       onValue(responsesRef, handleResponsesChange);
+      off(requestsRef);
+      onValue(requestsRef, handleRequestsChange);
     }
 
     return <div className="quizl-outer tile is-ancestor">
@@ -68,6 +82,7 @@ export default function QuizlApp(props) {
             isNext={opponent.id === nextPlayerId}
             isReady={true}
             onHit={handleHit}
+            onGuess={guess => handleGuess(opponent.id, guess)}
             disabled={ ! isReady}/>
         ))}
       </div>
@@ -141,12 +156,19 @@ export default function QuizlApp(props) {
       }
     }
 
+    function handleGuess(opponentId, guess) {
+      if (requestsRef) {
+        push(requestsRef, {player: dataSource.userId, target: opponentId, guess: guess});
+      }
+    }
+
     function handleRequestsChange(snapshot) {
       const requestsInfo = snapshot.val();
       if (requestsInfo === null || ! isReady) {
           return;
       }
-      let hasResponseChanged = false;
+      let hasResponseChanged = false,
+        haveLettersChanged = false;
       const response = {},
         newLetters = Object.assign({}, letters),
         playerNames = Object.fromEntries(opponents.map(
@@ -158,25 +180,49 @@ export default function QuizlApp(props) {
       let haveHitsChanged = requestValues.length !== hits.length;
       for (const request of requestValues) {
         const playerName = playerNames[request.player],
-          hitText = `${playerName} hit ${request.label}`,
+          targetName = playerNames[request.target],
           hitIndex = newHits.length;
+        let hitText = playerName;
+        if (request.label) {
+          hitText += `hit ${request.label}`;
+        }
+        else {
+          hitText += `guessed ${request.label} for ${targetName}`;
+        }
         newHits.push(hitText);
         haveHitsChanged = haveHitsChanged || hitText !== hits[hitIndex];
         newHitCounts[request.player] = (newHitCounts[request.player] || 0) + 1;
         if (request.player === dataSource.userId) {
           continue;
         }
-        const letter = letters[request.label] || '?',
-          upperLetter = letter.toUpperCase();
-        response[request.label] = upperLetter;
-        if (letter !== upperLetter) {
-          hasResponseChanged = true;
-          newLetters[request.label] = upperLetter;
+        if (request.label) {
+          const letter = letters[request.label] || '?',
+            upperLetter = letter.toUpperCase();
+          response[request.label] = upperLetter;
+          if (letter !== upperLetter) {
+            hasResponseChanged = true;
+            haveLettersChanged = true;
+            newLetters[request.label] = upperLetter;
+          }
+        }
+        else {
+          const upperGuess = request.guess.toUpperCase();
+          if (request.target === dataSource.userId &&
+              response[upperGuess] === undefined) {
+            hasResponseChanged = true;
+            const score = scoreGuess(request.guess, letters);
+            if (score > 0 && ! isSolved) {
+              setSolved(true);
+            }
+            response[upperGuess] = {player: request.player, score: score};
+          }
         }
       }
       if (hasResponseChanged) {
-        setLetters(newLetters);
         set(child(responsesRef, dataSource.userId), response);
+      }
+      if (haveLettersChanged) {
+        setLetters(newLetters);
       }
       if (haveHitsChanged) {
         setHits(newHits);
@@ -199,11 +245,33 @@ export default function QuizlApp(props) {
           opponent,
           {letters: Object.assign({}, opponent.letters)})]));
       let hasChanged = false;
-      for (const [playerId, playerLetters] of Object.entries(responsesInfo)) {
+      for (const [playerId, playerResponses] of Object.entries(responsesInfo)) {
+        const newGuesses = Object.entries(playerResponses).filter(
+          ([key, value]) => key.length === 5);
+        newGuesses.sort(([guess1, response1], [guess2, response2]) => (
+          response2.score > response1.score
+          ? 1
+          : response2.score < response1.score
+          ? -1
+          : guess2 > guess1
+          ? 1
+          : -1));
+        const newGuessDisplays = newGuesses.map(([guess, response]) => {
+          const guesserName = opponentMap[response.player].name,
+            result = response.score < 0 ? 'N' : response.score > 0 ? 'Y' : '?';
+          return `${guess}: ${result} from ${guesserName}`
+        });
+        let haveGuessesChanged = newGuessDisplays.length !== opponentMap[playerId]
+        if (newGuessDisplays.length !== 0) {
+          
+        }
+
         if (playerId === dataSource.userId) {
           continue;
         }
-        const newOpponent = opponentMap[playerId],
+        const playerLetters = Object.fromEntries(Object.entries(playerResponses).filter(
+          ([key, value]) => key.length === 2)),
+          newOpponent = opponentMap[playerId],
           oldLetterCount = Object.keys(newOpponent.letters).length,
           newLetterCount = Object.keys(playerLetters).length;
         if (oldLetterCount !== newLetterCount) {
@@ -222,8 +290,8 @@ export default function QuizlApp(props) {
 }
 
 /** Choose one of the players to go next.
- * @param players: [{seat, id, letters: {label: letter}}] letters are lower case
- *  if hidden
+ * @param players: [{seat, id, letters: {label: letter}, guesses: [display]}]
+ *  letters are lower case if hidden
  * @param hitCounts: {playerId: count}
  * @returns: id of chosen player.
  */

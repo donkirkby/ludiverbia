@@ -113,16 +113,20 @@ export function dropLetter(draggedLetter, targetId, oldLetters) {
  *  hasn't started
  * @param props.onHit - callback when a target button is clicked, receives
  *  label
+ * @param props.onGuess - callback when the guess button is clicked, receives
+ *  guess word
  */
 export function QuizlGrid(props) {
     const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor)),
       containers = [],
       [draggedLetter, setDraggedLetter] = useState(null),
+      [guess, setGuess] = useState(''),
       upperLetters = Object.fromEntries(Object.entries(props.letters).map(
         ([space, letter]) => [space, letter.toUpperCase()])),
       letterLabels = invertMap(upperLetters),
       isGridFull = Object.entries(upperLetters).length === 25;
-    let hiddenCount = 0;
+    let hiddenCount = 0,
+      isOpponent = false;
     for (let row = 0; row < 8; row++) {
       for (let column = 0; column < 8; column++) {
         const coordinateText = `${row}${column}`,
@@ -164,6 +168,7 @@ export function QuizlGrid(props) {
             letter = spaceLabel;
             disabled = props.disabled;
             onClick = handleHit;
+            isOpponent = true;
             hiddenCount++;
           }
         }
@@ -191,12 +196,28 @@ export function QuizlGrid(props) {
           </LetterSpace>);
       }
     }
-    const colourClass = props.isNext ? 'is-primary' : ''
+    const colourClass = props.isNext ? 'is-primary' : '',
+      hiddenDisplay = (hiddenCount && `${hiddenCount} hidden`) || '',
+      guesser = <div>
+        <input
+            type="text"
+            className="input"
+            placeholder="guess"
+            value={guess}
+            onChange={handleGuessChange}/>
+        <button
+            type="button"
+            onClick={handleGuess}
+            disabled={
+                ( ! guess) || (guess.length !== 5)}
+            className="button is-primary m-1">Guess</button>
+      </div>;
 
     return (
       <form onSubmit={handleReady}
         className={`quizl tile notification is-child ${colourClass} is-light`}>
-        <p>{props.player} {hiddenCount || ''} {props.isNext}</p>
+        <p>{props.player} {hiddenDisplay}</p>
+        {isOpponent && guesser}
         {props.isReady || (
           <div className="player">
             <button
@@ -256,4 +277,63 @@ export function QuizlGrid(props) {
       event.preventDefault();
       props.onReady();
     }
+
+    function handleGuessChange(event) {
+      setGuess(event.target.value);
+    }
+
+    function handleGuess() {
+      if (props.onGuess) {
+        props.onGuess(guess);
+      }
+    }
+}
+
+/**
+ * 
+ * @param guess - five-letter string, ignore case
+ * @param letters - same as QuizlGrid.letters: object with labels as keys and
+ *    letters as values, hidden letters are lower case
+ * @returns the number of hidden letters, if the guess is correct, -10 if the
+ *    guess is incorrect, or 0 if the guess is invalid.
+ */
+export function scoreGuess(guess, letters) {
+  const upperGuess = guess.toUpperCase();
+  let hiddenCount = 0;
+  for (const letter of Object.values(letters)) {
+    if (letter === letter.toLowerCase()) {
+      hiddenCount++;
+    }
+  }
+  for (let row = 5; row < 10; row++) {
+    let word = '';
+    for (let column = 0; column < 5; column++) {
+      const label = `${row}${column}`,
+        letter = letters[label];
+      word += letter;
+    }
+    if (word === upperGuess) {
+      return 0; // Can't guess completely visible word.
+    }
+    const upperWord = word.toUpperCase();
+    if (upperWord === upperGuess) {
+      return hiddenCount;
+    }
+  }
+  for (let column = 0; column < 5; column++) {
+    let word = '';
+    for (let row = 5; row < 10; row++) {
+      const label = `${row}${column}`,
+        letter = letters[label];
+      word += letter;
+    }
+    if (word === upperGuess) {
+      return 0; // Can't guess completely visible word.
+    }
+    const upperWord = word.toUpperCase();
+    if (upperWord === upperGuess) {
+      return hiddenCount;
+    }
+  }
+  return -10;
 }
