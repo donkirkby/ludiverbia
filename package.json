@@ -4,7 +4,7 @@
   "homepage": ".",
   "private": true,
   "dependencies": {
-    "@dnd-kit/core": "^5.0.1",
+    "@dnd-kit/core": "^5.0.2",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
