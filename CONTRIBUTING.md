@@ -1,4 +1,4 @@
-# Contributing to the Halfabet project
+# Contributing to the Ludiverbia project
 If you like this project and want to make it better, please help out. It could
 be as simple as sending [@donkirkby] a nice note on Twitter, you could report a
 bug, or pitch in with some development work. Check if there are some issues
@@ -19,16 +19,23 @@ you planning to submit your own fix in a pull request?
 The source code is in the `src` folder. You can run the tests with `npm test`,
 and run it in developer mode with `npm start`. To build a new release, run
 `npm run build`, and that will copy all the production files into
-`docs/halfabet`. GitHub pages serve from `docs`, so pushing the new files
-publishes the new release. The files in `_data`, `_includes`, `_layouts`, and
-`Gemfile` are all copied from the `public` folder, so check for accidental
-changes in those files after a build.
+`docs`. GitHub pages serve from `docs`, so pushing the new files
+publishes the new release.
 
 Try testing Jekyll [locally]. After everything is installed, launch the server
 with this command:
 
-    cd docs
-    bundle exec jekyll serve
+    ./serve.sh
+
+To debug the tests, open a Chrome tab, and type `chrome://inspect` in the
+address bar. Then click on the link to open dedicated devtools for Node. Add a
+`debugger;` call to your code where you want to debug. Finally, run the tests
+with this command:
+
+    npm run test:debug
+
+Once the browser has stopped in a file, you can remove the `debugger;` call and
+use regular breakpoints.
 
 [locally]: https://help.github.com/en/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll
 

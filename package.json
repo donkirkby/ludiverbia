@@ -21,6 +21,7 @@
     "postbuild": "node deploy.js",
     "test": "react-scripts test",
     "test:debug": "react-scripts --inspect test --runInBand --no-cache",
+    "build-words": "node buildWords.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -40,5 +41,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "request": "^2.88.2"
   }
 }
