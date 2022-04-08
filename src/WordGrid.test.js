@@ -49,11 +49,11 @@ test('add a word with enter key', () => {
   render(<WordGrid />);
   const newWord = screen.getByRole("textbox");
 
-  userEvent.type(newWord, "Example{enter}");
-
-  const oldWords = screen.queryAllByRole("row");
-  expect(oldWords.length).toBe(2);
-  expect(oldWords[0]).toHaveTextContent("EXAMPLE");
+  userEvent.type(newWord, "Example{enter}").then(() => {
+    const oldWords = screen.queryAllByRole("row");
+    expect(oldWords.length).toBe(2);
+    expect(oldWords[0]).toHaveTextContent("EXAMPLE");
+  });
 });
 
 test('add a second word', () => {
@@ -118,10 +118,11 @@ test('add a third word after with enter key', () => {
   render(<WordGrid startWord="avocado" endWord="zebra" newWord="zulu"/>);
   const newWord = screen.getByRole("textbox");
 
-  userEvent.type(newWord, "{enter}");
-
-  const oldWords = screen.queryAllByRole("row");
-  expect(oldWords.length).toBe(3);
+  userEvent.type(newWord, "{enter}").then(() => {
+    const oldWords = screen.queryAllByRole("row");
+    expect(oldWords.length).toBe(3);
+    expect(newWord.value).toBe("");
+  });
 });
 
 test('add a fourth word early', () => {

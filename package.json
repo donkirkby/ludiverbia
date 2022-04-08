@@ -20,6 +20,7 @@
     "build": "react-scripts build",
     "postbuild": "node deploy.js",
     "test": "react-scripts test",
+    "test:debug": "react-scripts --inspect test --runInBand --no-cache",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
