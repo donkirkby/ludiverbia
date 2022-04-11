@@ -21,7 +21,7 @@
     "postbuild": "node deploy.js",
     "test": "react-scripts test",
     "test:debug": "react-scripts --inspect test --runInBand --no-cache",
-    "build-words": "node buildWords.js",
+    "build-words": "node buildWords.mjs",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
