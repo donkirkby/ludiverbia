@@ -1,6 +1,8 @@
 export class NgramReader {
     constructor(limit) {
         this.entries = [];
+        this.words = new Set();
+        this.minCount = 0;
         this.limit = limit === undefined ? 10 : limit;
     }
 
@@ -13,9 +15,13 @@ export class NgramReader {
         return `NgramReader<${first}-${last}>`;
     }
 
+    toJSON = () => {
+        return this.entries.map(entry => entry[0]);
+    }
+
     read = (line) => {
         const terms = line.split('\t'),
-            word = terms.shift();  // extract first item
+            word = terms.shift().toUpperCase();  // extract first item
         if ( ! /^[A-Za-z]+$/.test(word)) {
             return;
         }
@@ -25,6 +31,18 @@ export class NgramReader {
                 count = parseInt(stats[1]);
             maxCount = maxCount < count ? count : maxCount;
         }
+        if (this.words.has(word)) {
+            for (const [index, [oldWord, oldCount]] of this.entries.entries()) {
+                if (word === oldWord) {
+                    maxCount += oldCount;
+                    this.entries.splice(index, 1);
+                    break;
+                }
+            }
+        }
+        if (maxCount < this.minCount) {
+            return;
+        }
         let insertIndex = this.entries.length;
         for (const [index, [_oldWord, oldCount]] of this.entries.entries()) {
             if (oldCount < maxCount) {
@@ -33,6 +51,11 @@ export class NgramReader {
             }
         }
         this.entries.splice(insertIndex, 0, [word, maxCount]);
-        this.entries.splice(this.limit);
+        const dropped = this.entries.splice(this.limit);
+        for (const [oldWord, oldCount] of dropped) {
+            this.words.delete(oldWord);
+            this.minCount = oldCount;
+        }
+        this.words.add(word);
     }
 }

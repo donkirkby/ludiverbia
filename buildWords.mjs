@@ -1,4 +1,4 @@
-import {createReadStream, createWriteStream, unlink, access} from 'fs';
+import {createReadStream, createWriteStream, unlink, access, writeFile} from 'fs';
 import readline from 'readline';
 import request from 'request';
 import {compose}  from 'stream';
@@ -73,7 +73,8 @@ function downloadNgramsIfNeeded() {
 };
 
 async function gunzipLineByLine() {
-    const ngrams = new NgramReader(100);
+    const ngrams = new NgramReader(50000),
+        startTime = new Date();
     let readCount = 0;
   
     for (let i = 0; i < 24; i++) {
@@ -93,12 +94,24 @@ async function gunzipLineByLine() {
             ngrams.read(line);
             readCount += 1;
             if (readCount % 1000000 === 0) {
-                console.timeLog('Reading', `${readCount} ngrams: ${ngrams}.`)
+                const endTime = new Date(),
+                    duration = endTime - startTime,
+                    itemDuration = Math.round(duration / readCount*1000)/1000;
+                console.timeLog(
+                    'Reading',
+                    `${readCount} ngrams: ${ngrams} at ${itemDuration}ms/item.`)
             }
         }
     }
     console.timeEnd('Reading');
-    console.log(ngrams.entries);
+    writeFile(
+        'src/wordList.json',
+        JSON.stringify(ngrams.toJSON(), null, 1),
+        err => {
+            if (err !== null) {
+                console.log(`Failed to write word list: ${err}`);
+            }
+        });
 }
 
 async function main() {
