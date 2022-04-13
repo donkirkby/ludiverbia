@@ -1,4 +1,11 @@
-import {createReadStream, createWriteStream, unlink, access, writeFile} from 'fs';
+import nlp from 'compromise/two';
+import {
+    createReadStream,
+    createWriteStream,
+    unlink,
+    accessSync,
+    writeFile,
+    readFileSync} from 'fs';
 import readline from 'readline';
 import request from 'request';
 import {compose}  from 'stream';
@@ -39,19 +46,14 @@ const download = (url, dest) => {
     });
 };
 
-function downloadIfNeeded(url, dest) {
-    return new Promise((resolve) => {
-        access(dest, (err) => {
-            if (err === null) {
-                resolve();
-            }
-            else {
-                // File not found, download it.
-                console.log(`Downloading ${url}`)
-                resolve(download(url, dest));
-            }
-        });
-    });
+async function downloadIfNeeded(url, dest) {
+    try {
+        accessSync(dest);
+    } catch (err) {
+        // File not found, download it.
+        console.log(`Downloading ${url}`)
+        await download(url, dest);
+    }
 }
 
 function downloadNgramsIfNeeded() {
@@ -72,7 +74,7 @@ function downloadNgramsIfNeeded() {
     return Promise.all(promises);
 };
 
-async function gunzipLineByLine() {
+async function gunzipLineByLine(wordListPath) {
     const ngrams = new NgramReader(50000),
         startTime = new Date();
     let readCount = 0;
@@ -104,20 +106,48 @@ async function gunzipLineByLine() {
         }
     }
     console.timeEnd('Reading');
+    const wordList = ngrams.toJSON();
     writeFile(
-        'src/wordList.json',
-        JSON.stringify(ngrams.toJSON(), null, 1),
+        wordListPath,
+        JSON.stringify(wordList, null, 1).replaceAll('\n ', '\n'),
         err => {
             if (err !== null) {
                 console.log(`Failed to write word list: ${err}`);
             }
         });
+    return wordList;
+}
+
+async function findTopWordsIfNeeded(wordListPath) {
+    try {
+        accessSync(wordListPath);
+    } catch (err) {
+        // File not found, build it.
+        await downloadNgramsIfNeeded(wordListPath);
+        console.time('Reading');
+        return await gunzipLineByLine();
+    }
+    return JSON.parse(readFileSync(wordListPath, 'utf8'));
 }
 
 async function main() {
-    await downloadNgramsIfNeeded();
-    console.time('Reading');
-    gunzipLineByLine();
+    const wordListPath = 'src/wordList.json',
+        wordList = await findTopWordsIfNeeded(wordListPath),
+        bannedTags = [
+            'Acronym',
+            'ProperNoun',
+            'Abbreviation'
+        ];
+    for (const word of wordList.slice(0, 1000)) {
+        const doc = nlp(word),
+            wordTags = doc.out('tags')[0][word.toLowerCase()];
+        for (const bannedTag of bannedTags) {
+            if (wordTags.indexOf(bannedTag) >= 0) {
+                console.log(word, wordTags);
+                break;
+            }
+        }
+    }
 }
 
 main();
