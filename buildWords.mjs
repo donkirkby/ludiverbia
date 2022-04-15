@@ -72,7 +72,7 @@ function downloadNgramsIfNeeded() {
     return Promise.all(promises);
 };
 
-async function gunzipLineByLine() {
+async function gunzipLineByLine(wordListPath) {
     const ngrams = new NgramReader(50000),
         startTime = new Date();
     let readCount = 0;
@@ -104,20 +104,32 @@ async function gunzipLineByLine() {
         }
     }
     console.timeEnd('Reading');
+    const maxCapitalRate = 0.97,
+        capitals = ngrams.calculateCapitalRates(maxCapitalRate-0.01),
+        wordList = ngrams.toJSON(maxCapitalRate);
     writeFile(
-        'src/wordList.json',
-        JSON.stringify(ngrams.toJSON(), null, 1),
+        wordListPath,
+        JSON.stringify(wordList, null, 1).replaceAll('\n ', '\n'),
         err => {
             if (err !== null) {
                 console.log(`Failed to write word list: ${err}`);
             }
         });
+    writeFile(
+        'src/capitals.json',
+        JSON.stringify(capitals, null, 1).replaceAll('\n ', '\n'),
+        err => {
+            if (err !== null) {
+                console.log(`Failed to write capitals: ${err}`);
+            }
+        });
+    return wordList;
 }
 
 async function main() {
     await downloadNgramsIfNeeded();
     console.time('Reading');
-    gunzipLineByLine();
+    gunzipLineByLine('src/wordList.json');
 }
 
 main();
