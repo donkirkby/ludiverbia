@@ -4,7 +4,7 @@ test('starts with no entries', () => {
     const reader = new NgramReader();
 
     expect(reader.entries).toEqual([]);
-    expect(reader.limit).toEqual(10);  // default
+    expect(reader.finalLimit).toEqual(10);  // default
 });
 
 test('reads an entry', () => {
@@ -32,8 +32,8 @@ test('sorts multiple entries', () => {
     expect(reader.entries).toEqual([['banana', 456, 456], ['apple', 123, 123]]);
 });
 
-test('limits entries', () => {
-    const limit = 2,
+test('limits entries to twice final limit', () => {
+    const limit = 1,
         reader = new NgramReader(limit);
 
     reader.read('apple\t2000,123,20');
@@ -85,6 +85,31 @@ test('Converts to JSON', () => {
     expect(JSON.stringify(reader.toJSON())).toEqual('["banana","apple"]');
 });
 
+test('Converts to JSON with limit', () => {
+    const limit = 1,
+        reader = new NgramReader(limit);
+
+    reader.read('apple\t2000,123,20');
+    reader.read('banana\t2000,456,20');
+
+    expect(JSON.stringify(reader.toJSON())).toEqual('["banana"]');
+});
+
+test('Converts to raw CSV with limit', () => {
+    const limit = 1,
+        reader = new NgramReader(limit);
+
+    reader.read('apple\t2000,123,20');
+    reader.read('cherry\t2000,456,20');
+    reader.read('banana\t2000,200,20');
+    reader.read('bAnana\t2000,1,1');
+
+    expect(reader.toRawCSV()).toEqual(`\
+word,lower,total
+cherry,456,456
+banana,200,201`);
+});
+
 test('reports capitalization rates', () => {
     const reader = new NgramReader();
 
@@ -111,6 +136,17 @@ test('reports capitalization rates with cutoff', () => {
         [['apple', 0.875]]);
 });
 
+test('handles ties when combining mixed case', () => {
+    const reader = new NgramReader(),
+        minCapitalRate = 0.8;
+
+    reader.read('apple\t2000,100,20');
+    reader.read('banana\t2000,100,20');
+    reader.read('Apple\t2000,1,20');
+
+    expect(reader.entries).toEqual([['apple', 100, 101], ['banana', 100, 100]]);
+});
+
 test('converts to JSON with cutoff', () => {
     const reader = new NgramReader(),
         maxCapitalRate = 0.8;
@@ -121,4 +157,14 @@ test('converts to JSON with cutoff', () => {
     reader.read('Banana\t2000,79,20');
 
     expect(JSON.stringify(reader.toJSON(maxCapitalRate))).toEqual('["banana"]');
+});
+
+test('converts to JSON sorted by lower-case counts', () => {
+    const reader = new NgramReader();
+
+    reader.read('apple\t2000,50,20');
+    reader.read('Apple\t2000,200,20');
+    reader.read('banana\t2000,100,20');
+
+    expect(JSON.stringify(reader.toJSON())).toEqual('["banana","apple"]');
 });

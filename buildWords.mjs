@@ -104,8 +104,7 @@ async function gunzipLineByLine(wordListPath) {
         }
     }
     console.timeEnd('Reading');
-    const maxCapitalRate = 0.97,
-        capitals = ngrams.calculateCapitalRates(maxCapitalRate-0.01),
+    const maxCapitalRate = 0.95,
         wordList = ngrams.toJSON(maxCapitalRate);
     writeFile(
         wordListPath,
@@ -116,11 +115,11 @@ async function gunzipLineByLine(wordListPath) {
             }
         });
     writeFile(
-        'src/capitals.json',
-        JSON.stringify(capitals, null, 1).replaceAll('\n ', '\n'),
+        'src/rawWords.csv',
+        ngrams.toRawCSV(),
         err => {
             if (err !== null) {
-                console.log(`Failed to write capitals: ${err}`);
+                console.log(`Failed to write raw words: ${err}`);
             }
         });
     return wordList;
