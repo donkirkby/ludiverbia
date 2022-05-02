@@ -9,3 +9,7 @@
 input, button {
   font-size: inherit
 }
+
+.acrostic-outer {
+  display: flex;
+}
