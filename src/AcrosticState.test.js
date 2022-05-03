@@ -62,6 +62,24 @@ test('rejects an entry that uses letters too many times', () => {
     expect(state.entries).toEqual([]);
 });
 
+test('rejects a word that was already used', () => {
+    const state = new AcrosticState('DEAD');
+
+    state.submit(3, 'DAD');
+    state.submit(3, 'DAD'); // replacing the same entry is allowed.
+    expect(() => state.submit(0, 'DAD')).toThrow('Too many copies of word DAD.');
+
+    expect(state.entries).toEqual([undefined, undefined, undefined, 'DAD']);
+});
+
+test('rejects the spine as an entry', () => {
+    const state = new AcrosticState('RACED');
+
+    expect(() => state.submit(0, 'RACED')).toThrow('Main word cannot be an entry.');
+
+    expect(state.entries).toEqual([]);
+});
+
 test('rejects an entry that starts with the wrong letter', () => {
     const state = new AcrosticState('RACED');
 
@@ -78,4 +96,73 @@ test('rejects an entry not in the word list', () => {
     expect(() => state.submit(1, 'Ader')).toThrow('Unknown word: Ader');
 
     expect(state.entries).toEqual([undefined, 'ACE']);
+});
+
+test('gives a hint', () => {
+    const startText = `\
+RACED
+
+
+CARE`,
+        wordList = ['a', 'care'],
+        state = new AcrosticState(startText, wordList);
+
+    const [hintWord, spineIndex, listIndex] = state.getHint();
+
+    expect(hintWord).toEqual('A');
+    expect(spineIndex).toEqual(1);
+    expect(listIndex).toEqual(0);
+
+    expect(state.build()).toEqual(startText);
+});
+
+test('gives a hint using only letters in the spine', () => {
+    const startText = `\
+TRACED
+
+
+
+CARE`,
+        wordList = ['the', 'a', 'care'],
+        state = new AcrosticState(startText, wordList);
+
+    const [hintWord, spineIndex, listIndex] = state.getHint();
+
+    expect(hintWord).toEqual('A');
+    expect(spineIndex).toEqual(2);
+    expect(listIndex).toEqual(1);
+});
+
+test('gives a hint that improves the score', () => {
+    const startText = `\
+RACED
+
+ACE
+CARE`,
+        wordList = ['a', 'ace', 'care', 'ear'],
+        state = new AcrosticState(startText, wordList);
+
+    const [hintWord, spineIndex, listIndex] = state.getHint();
+
+    expect(hintWord).toEqual('EAR');
+    expect(spineIndex).toEqual(3);
+    expect(listIndex).toEqual(3);
+});
+
+test('gives an empty hint when answer is perfect', () => {
+    const startText = `\
+RACED
+
+ACE
+CARE
+EAR
+DEAR`,
+        wordList = ['a', 'ace', 'care', 'ear', 'dear'],
+        state = new AcrosticState(startText, wordList);
+
+    const [hintWord, spineIndex, listIndex] = state.getHint();
+
+    expect(hintWord).toBeUndefined();
+    expect(spineIndex).toEqual(-1);
+    expect(listIndex).toEqual(-1);
 });
