@@ -1,4 +1,5 @@
 import AcrosticState from "./AcrosticState";
+import wordList from "./wordList.json";
 
 test('starts with a word and no entries', () => {
     const state = new AcrosticState('RACED');
@@ -133,6 +134,21 @@ CARE`,
     expect(listIndex).toEqual(1);
 });
 
+test('skips hint with too many repeated letters', () => {
+    const startText = `\
+RACED
+RACE
+A`,
+        wordList = ['a', 'race', 'raced', 'dared', 'dare'],
+        state = new AcrosticState(startText, wordList);
+
+    const [hintWord, spineIndex, listIndex] = state.getHint();
+
+    expect(hintWord).toEqual('DARE');
+    expect(spineIndex).toEqual(4);
+    expect(listIndex).toEqual(4);
+});
+
 test('gives a hint that improves the score', () => {
     const startText = `\
 RACED
@@ -157,7 +173,7 @@ ACE
 CARE
 EAR
 DEAR`,
-        wordList = ['a', 'ace', 'care', 'ear', 'dear'],
+        wordList = ['a', 'ace', 'care', 'ear', 'dear', 'raced'],
         state = new AcrosticState(startText, wordList);
 
     const [hintWord, spineIndex, listIndex] = state.getHint();
@@ -165,4 +181,20 @@ DEAR`,
     expect(hintWord).toBeUndefined();
     expect(spineIndex).toEqual(-1);
     expect(listIndex).toEqual(-1);
+});
+
+test('real example', () => {
+    const state = new AcrosticState('vulgarism', wordList);
+
+    state.submit(0, 'vulgar');
+    state.submit(1, 'usa');
+    state.submit(2, 'lair');
+    state.submit(3, 'girls');
+    state.submit(4, 'arms');
+    state.submit(5, 'rivals');
+    state.submit(6, 'ils');
+    state.submit(7, 'simular');
+    state.submit(8, 'mails');
+
+    expect(state.getHint()).toEqual([]);
 });

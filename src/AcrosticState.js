@@ -82,14 +82,16 @@ export default class AcrosticState {
         for (let listIndex = 0; listIndex < this.wordList.length; listIndex++) {
             const word = this.wordList[listIndex],
                 wordLetterCounts = {};
-            let isValid = true;
-            for (let i = 0; i < word.length; i++) {
+            let isValid = word.toUpperCase() !== this.spine;
+            for (let i = 0; i < word.length && isValid; i++) {
                 const letter = word.charAt(i),
                     wordLetterCount = (wordLetterCounts[letter] || 0) + 1,
                     spineLetterCount = spineLetterCounts[letter] || 0;
                 if (wordLetterCount > spineLetterCount) {
                     isValid = false;
-                    break;
+                }
+                else {
+                    wordLetterCounts[letter] = wordLetterCount;
                 }
             }
             if ( ! isValid) {
