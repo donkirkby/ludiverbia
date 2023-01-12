@@ -193,8 +193,13 @@ test('real example', () => {
     state.submit(4, 'arms');
     state.submit(5, 'rivals');
     state.submit(6, 'ils');
-    state.submit(7, 'simular');
+    state.submit(7, 'sail' );
     state.submit(8, 'mails');
 
-    expect(state.getHint()).toEqual([]);
+    const expectedSpineIndex = 7,
+        expectedWordIndex = 2367;
+    expect(state.getHint()).toEqual([
+        'SUGAR',
+        expectedSpineIndex,
+        expectedWordIndex]);
 });
