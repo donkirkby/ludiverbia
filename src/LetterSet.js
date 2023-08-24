@@ -50,18 +50,18 @@ export class LetterSet {
 
     drag = (row, column) => {
         if (this.dragging !== undefined) {
-            throw 'Already dragging a letter.';
+            throw new Error('Already dragging a letter.');
         }
         this.dragging = this.letters[row][column];
         if (this.dragging === '.') {
-            throw `No letter to drag at ${row}, ${column}.`;
+            throw new Error(`No letter to drag at ${row}, ${column}.`);
         }
         this.letters[row][column] = '.';
     }
 
     drop = (row, column) => {
         if (this.dragging === undefined) {
-            throw 'Not dragging a letter.';
+            throw new Error('Not dragging a letter.');
         }
         const replaced = this.letters[row][column];
         this.letters[row][column] = this.dragging;

@@ -6,8 +6,6 @@ import {LetterTile} from './LetterTile';
 import {Draggable} from './Draggable';
 import { LetterSet } from './LetterSet';
 
-const size = 8;
-
 /** Grid of letters for the Acrostic game
  * 
  * @param props.letters - string with letter set state
@@ -32,43 +30,23 @@ export function AcrosticGrid(props) {
         let tile = null,
           className = '',
           letter = null,
+          spaceLabel = ' ',
           disabled = false,
           onClick = null,
           isHidden = false;
-        if (defaultIndex !== -1) {
-          className = 'home';
-          letter = String.fromCharCode(65+defaultIndex);
-          if (letterLabels[letter] !== undefined) {
-            letter = null;  // dragged away
-          }
-          else {
-            disabled = props.isReady;
-          }
-          isHidden = props.isReady;
+        className = 'cell';
+        letter = letterSet.getLetter(row, column);
+        if (letter) {
+          disabled = props.isReady;
         }
-        else if (isSpacer) {
-          className = 'spacer';
-        }
-        else {
-          className = 'cell';
-          letter = upperLetters[spaceLabel] || null;
-          if (letter) {
-            disabled = props.isReady;
-            isHidden = letter !== props.letters[spaceLabel];
-            if (isHidden) {
-              hiddenCount++;
-            }
-          }
-          else if (props.isReady) {
-            letter = spaceLabel;
-            disabled = props.disabled;
-            onClick = handleHit;
-            hiddenCount++;
-          }
+        else if (props.isReady) {
+          letter = spaceLabel;
+          disabled = props.disabled;
+          onClick = handleHit;
         }
         if (letter !== null && letter !== draggedLetter) {
-          const tileId = 'tile' + letter,
-            dragId = 'drag' + letter;
+          const tileId = 'tile' + row + column,
+            dragId = 'drag' + row + column;
           tile = <LetterTile
             key={tileId}
             text={letter}
@@ -109,16 +87,11 @@ export function AcrosticGrid(props) {
       </form>
     );
 
-    function handleFill(event) {
-      event.preventDefault();
-      props.onLettersChange(fillLetters(props.letters));
-    }
-
     function handleDragStart(event) {
-      if (props.isReady) {
-        return;
-      }
-      setDraggedLetter(event.active.id.slice(-1));
+      const dragId = event.active.id,
+        dragRow = parseInt(dragId.slice(-2)),
+        dragColumn = parseInt(dragId.slice(-1));
+      letterSet.drag(dragRow, dragColumn);
     }
 
     function handleHit(event) {
@@ -131,12 +104,12 @@ export function AcrosticGrid(props) {
       if (props.isReady) {
         return;
       }
-      const newLetters = dropLetter(
-        draggedLetter,
-        event.over && event.over.id,
-        props.letters);
-      if (newLetters !== undefined) {
-        props.onLettersChange(newLetters);
+      const dropId = event.over && event.over.id,
+        dropRow = dropId && parseInt(dropId.slice(-2)),
+        dropColumn = dropId && parseInt(dropId.slice(-1));
+      if (dropId) {
+        letterSet.drop(dropRow, dropColumn);
+        props.onLettersChange(letterSet.format());
       }
       setDraggedLetter(null);
     }
