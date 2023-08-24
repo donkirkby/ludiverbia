@@ -14,7 +14,9 @@ export function LetterSpace(props) {
   
   
   return (
-    <div ref={setNodeRef} className={'letter-space ' + props.className + className}>
+    <div id={`letter-space-${props.id}`}
+        ref={setNodeRef}
+        className={'letter-space ' + props.className + className}>
       {props.children}
     </div>
   );

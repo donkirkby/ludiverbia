@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import QuizlApp from './QuizlApp';
+import AcrosticApp from './AcrosticApp';
 import reportWebVitals from './reportWebVitals';
 import DataSource from "./DataSource";
 
@@ -12,6 +13,9 @@ const pagePath = window.location.pathname.replace(/(\.html)?\/*$/, ''),
   pageName = pagePath.split('/').at(-1);
 var app;
 switch (pageName) {
+  case 'acrostic':
+    app = <AcrosticApp dataSource={dataSource}/>
+    break;
   case '': // dev mode
   case 'quizl':
     app = <QuizlApp dataSource={dataSource}/>

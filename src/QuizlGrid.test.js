@@ -1,4 +1,6 @@
-import { dropLetter, fillLetters } from './QuizlGrid';
+import { render, screen } from '@testing-library/react';
+
+import { QuizlGrid, dropLetter, fillLetters } from './QuizlGrid';
 
 test('drops letter', () => {
   const oldLetters = {},
@@ -20,4 +22,11 @@ test('fills remaining letters', () => {
 
     expect(newLetters[51]).toEqual('X');
     expect(Object.entries(newLetters).length).toEqual(25);
+});
+
+test('home layout', () => {
+  render(<QuizlGrid letters={{}} />);
+  const letterButton = screen.getByText("A"),
+    letterWrapper = letterButton.parentElement.parentElement.parentElement;
+  expect(letterWrapper.id).toEqual("letter-space-home01");
 });

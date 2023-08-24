@@ -26,13 +26,9 @@ export function AcrosticGrid(props) {
       containers = [],
       [draggedLetter, setDraggedLetter] = useState(null),
       letterSet = new LetterSet(props.letters);
-    for (let row = 0; row < 8; row++) {
-      for (let column = 0; column < 8; column++) {
-        const coordinateText = `${row}${column}`,
-          spaceLabel = coordinatesToLabel(row, column),
-          defaultIndex = defaultPositions.indexOf(coordinateText),
-          isSpacer = defaultIndex === -1 && (
-            row === 0 || row === size-1 || row === size-2 || column === size-2);
+    for (let row = 0; row < letterSet.getSize(); row++) {
+      for (let column = 0; column < letterSet.getSize(); column++) {
+        const coordinateText = `${row}${column}`;
         let tile = null,
           className = '',
           letter = null,
@@ -98,18 +94,8 @@ export function AcrosticGrid(props) {
 
     return (
       <form onSubmit={handleReady}
-        className={`quizl tile notification is-child ${colourClass} is-light`}>
-        <p>{props.player} {hiddenCount || ''} {props.isNext}</p>
-        {props.isReady || (
-          <div className="player">
-            <button
-              className="button is-large is-primary m-1"
-              disabled={ ! (isGridFull && props.isConnected)}>Ready</button>
-            <button
-              className="button is-large is-primary m-1"
-              onClick={handleFill}
-              disabled={isGridFull}>Fill</button>
-          </div>)}
+        className={`acrostic tile notification is-child ${colourClass} is-light`}>
+        <p>{props.player}</p>
         <DndContext sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
